@@ -285,8 +285,8 @@ export const DashboardJudge = {
                 <!-- PANEL 3: RISK SCORE & RECOMMENDATION -->
                 <div class="panel-col">
                     <div class="panel-inner" style="border: 2px solid var(--color-gold);">
-                        <div class="panel-header" style="background-color: var(--color-navy); color: var(--color-gold-light); display:flex; align-items:center; gap:6px;">
-                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line></svg>
+                        <div class="panel-header" style="background-color: #0c1a30 !important; color: #f0d080 !important; display:flex; align-items:center; gap:6px; border-bottom: 1px solid #1e2e42;">
+                            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="color:#f0d080 !important;"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line></svg>
                             <span>Quantex Smart Decision Advice</span>
                         </div>
                         <div class="panel-body">

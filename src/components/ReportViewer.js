@@ -130,7 +130,7 @@ export const ReportViewer = {
             case 1: // Bail Eligibility Assessment Report
                 return `
                     <div class="document-title-block" style="margin-bottom: 12px; text-align: center;">
-                        <h3 style="font-size: 15px; margin: 0; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #111; display: inline-block; padding-bottom: 2px; color: var(--color-navy);">Bail Eligibility Assessment Report</h3>
+                        <h3 style="font-size: 15px; margin: 0; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #111; display: inline-block; padding-bottom: 2px; color: var(--color-gold);">Bail Eligibility Assessment Report</h3>
                     </div>
                     
                     <div class="legal-metadata-grid" style="grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; margin-bottom: 14px; font-size: 11px; background-color: #fafafa; border: 1px solid #ddd; border-radius: 4px; color: #111;">
@@ -640,12 +640,12 @@ export const ReportViewer = {
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;">
                         <div style="background-color: #f7f3ec; padding: 12px; border-radius: 4px; text-align:center;">
                             <h5 style="font-size: 12px; color:#666;">AVG PROCESSING TIME</h5>
-                            <p style="font-family: var(--font-mono); font-size: 24px; font-weight:700; color: var(--color-navy);">14.2 Min</p>
+                            <p style="font-family: var(--font-mono); font-size: 24px; font-weight:700; color: var(--color-gold);">14.2 Min</p>
                             <span style="font-size: 10px; color:#1a7a4a;">Target: 30 Min (Cleared)</span>
                         </div>
                         <div style="background-color: #f7f3ec; padding: 12px; border-radius: 4px; text-align:center;">
                             <h5 style="font-size: 12px; color:#666;">OBLIGATION VALUE ACTIVE</h5>
-                            <p style="font-family: var(--font-mono); font-size: 24px; font-weight:700; color: var(--color-navy);">₹4.2 Cr</p>
+                            <p style="font-family: var(--font-mono); font-size: 24px; font-weight:700; color: var(--color-gold);">₹4.2 Cr</p>
                             <span style="font-size: 10px; color:#555;">Across 148 mutated properties</span>
                         </div>
                         <div style="background-color: #f7f3ec; padding: 12px; border-radius: 4px; text-align:center;">

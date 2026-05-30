@@ -14,8 +14,8 @@
   --color-table-header: #172436;
   --color-border: #1e2e42;
   
-  --color-navy: #f0d080; /* Elegant soft gold for Dark Mode headers */
-  --color-navy-sec: #38bdf8; /* Vibrant light blue for Dark Mode subheadings */
+  --color-navy: #08111e; /* Constant deep navy background */
+  --color-navy-sec: #0c1a30; /* Constant deep corporate navy */
   
   --color-gold: #c9a84c;
   --color-gold-light: #f0d080;
