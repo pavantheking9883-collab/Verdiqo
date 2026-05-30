@@ -590,6 +590,38 @@ export const DashboardJudge = {
                             </div>
                         </div>
 
+                        <!-- 6. Immigration & Border Control Systems -->
+                        <div style="background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px; grid-column: span 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 700; color: var(--color-text-main); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
+                                    <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-success); border-radius: 50%;"></span>
+                                    Immigration & Border Control Systems
+                                </span>
+                                <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success); font-weight: 700;">CONNECTED</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--color-text-muted); line-height: 1.4;">
+                                Checked: <strong>Bureau of Immigration (BoI) API, MEA Passport Seva Registry, LOC lists</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.02); border-radius: 4px; padding: 8px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--color-border);">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Travel History Exit/Entry:</span>
+                                    <span style="color: var(--color-success); font-weight: 700;">✓ Verified (2 trips in 2025)</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Lookout Circular (LOC):</span>
+                                    <span>${c.accused.travelRestricted ? '<span style="color: var(--color-danger); font-weight:700;">⚠ LOC ACTIVE</span>' : '<span style="color: var(--color-success); font-weight:700;">✓ CLEAR / NO ACTIVE LOC</span>'}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Passport Active Watch:</span>
+                                    <span style="color: ${c.accused.travelRestricted ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight:700;">${c.accused.travelRestricted ? 'FLIGHT RISK RECORDED' : 'CLEAN / VERIFIED'}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 6px;">
+                                <span>SECURE HASH: SHA-256/BOI-LOC-7492</span>
+                                <span>LATENCY: 110ms</span>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>

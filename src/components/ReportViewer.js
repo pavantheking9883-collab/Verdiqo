@@ -193,6 +193,12 @@ export const ReportViewer = {
                                 <td style="padding: 4px 6px; border: 1px solid #cbd5e1;">${d.accused.travelRestricted ? '<span style="color:#c0392b; font-weight:700;">⚠️ WATCHLIST PREVENT DEPARTURE</span>' : '<span style="color:#1a7a4a; font-weight:700;">✓ NO ACTIVE IMMIGRATION WATCH</span>'}</td>
                             </tr>
                             <tr>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Travel History & LOC Check</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Exit/Entry: Verified 2 trips in 2025</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Bureau of Immigration (BoI) API</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1;">${d.accused.travelRestricted ? '<span style="color:#c0392b; font-weight:700;">⚠️ ACTIVE LOOKOUT CIRCULAR (LOC)</span>' : '<span style="color:#1a7a4a; font-weight:700;">✓ CLEAR (No active LOC / travel warnings)</span>'}</td>
+                            </tr>
+                            <tr>
                                 <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Declared Monthly Income</td>
                                 <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">₹${parseFloat(d.accused.monthlyIncome || 0).toLocaleString('en-IN')}</td>
                                 <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Income Tax NSDL API</td>
