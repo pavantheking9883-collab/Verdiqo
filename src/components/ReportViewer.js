@@ -129,176 +129,176 @@ export const ReportViewer = {
         switch(reportId) {
             case 1: // Bail Eligibility Assessment Report
                 return `
-                    <div class="document-title-block">
-                        <h3>Bail Eligibility Assessment Report</h3>
+                    <div class="document-title-block" style="margin-bottom: 12px; text-align: center;">
+                        <h3 style="font-size: 15px; margin: 0; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #111; display: inline-block; padding-bottom: 2px; color: var(--color-navy);">Bail Eligibility Assessment Report</h3>
                     </div>
                     
-                    <div class="legal-metadata-grid">
+                    <div class="legal-metadata-grid" style="grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 10px; margin-bottom: 14px; font-size: 11px; background-color: #fafafa; border: 1px solid #ddd; border-radius: 4px; color: #111;">
                         <div class="meta-field">
-                            <span class="meta-lbl">Case Number:</span>
-                            <span class="meta-val code">${d.caseNumber}</span>
+                            <span class="meta-lbl" style="width: 110px; font-weight: 700; color: #444; font-size: 9.5px; text-transform: uppercase;">Case Number:</span>
+                            <span class="meta-val code" style="color: #111;">${d.caseNumber}</span>
                         </div>
                         <div class="meta-field">
-                            <span class="meta-lbl">FIR Number:</span>
-                            <span class="meta-val code">${d.firNumber}</span>
+                            <span class="meta-lbl" style="width: 110px; font-weight: 700; color: #444; font-size: 9.5px; text-transform: uppercase;">FIR Number:</span>
+                            <span class="meta-val code" style="color: #111;">${d.firNumber}</span>
                         </div>
                         <div class="meta-field">
-                            <span class="meta-lbl">Accused Name:</span>
-                            <span class="meta-val">${d.accused.fullName}</span>
+                            <span class="meta-lbl" style="width: 110px; font-weight: 700; color: #444; font-size: 9.5px; text-transform: uppercase;">Accused Name:</span>
+                            <span class="meta-val" style="font-weight: 700; color: #111;">${d.accused.fullName}</span>
                         </div>
                         <div class="meta-field">
-                            <span class="meta-lbl">IPC Sections:</span>
+                            <span class="meta-lbl" style="width: 110px; font-weight: 700; color: #444; font-size: 9.5px; text-transform: uppercase;">IPC Sections:</span>
                             <span class="meta-val" style="color: #c0392b; font-weight:700;">${d.ipcSections}</span>
                         </div>
                         <div class="meta-field">
-                            <span class="meta-lbl">Date of Arrest:</span>
-                            <span class="meta-val">${d.dateOfArrest}</span>
+                            <span class="meta-lbl" style="width: 110px; font-weight: 700; color: #444; font-size: 9.5px; text-transform: uppercase;">Date of Arrest:</span>
+                            <span class="meta-val" style="color: #111;">${d.dateOfArrest}</span>
                         </div>
                         <div class="meta-field">
-                            <span class="meta-lbl">Proposed Bail:</span>
-                            <span class="meta-val" style="font-family: var(--font-mono); font-weight:700;">₹${proposedBail.toLocaleString('en-IN')}</span>
+                            <span class="meta-lbl" style="width: 110px; font-weight: 700; color: #444; font-size: 9.5px; text-transform: uppercase;">Proposed Bail:</span>
+                            <span class="meta-val" style="font-family: var(--font-mono); font-weight:700; color: #111;">₹${proposedBail.toLocaleString('en-IN')}</span>
                         </div>
                     </div>
                     
-                    <div class="legal-section-header">1. IDENTITY VERIFICATION STATUS</div>
-                    <p class="legal-text-p">
+                    <div class="legal-section-header" style="font-size: 12px; margin-top: 10px; margin-bottom: 6px; padding-bottom: 2px; font-weight: 700; border-bottom: 1px solid #ddd; color: #111;">1. IDENTITY VERIFICATION STATUS</div>
+                    <p class="legal-text-p" style="font-size: 11px; margin-bottom: 10px; line-height: 1.35; text-align: justify; color: #111;">
                         The accused’s Aadhaar credential was queried via the UIDAI API. Core biometrics (10 fingerprints and dual iris scans) were successfully validated at the counter. 
-                        Status is marked as: <strong>${d.checks.identity.status === 'GREEN' ? 'IDENTITY FULLY CONFIRMED' : 'REJECTED/ALERT RAISED'}</strong>.
+                        Status is marked as: <strong style="color: #1a7a4a; font-weight: 700;">${d.checks.identity.status === 'GREEN' ? 'IDENTITY FULLY CONFIRMED' : 'REJECTED/ALERT RAISED'}</strong>.
                     </p>
 
-                    <div class="legal-section-header">2. ACCUSED PERSONAL ASSETS & IMMIGRATION WATCHLIST</div>
-                    <p class="legal-text-p">
+                    <div class="legal-section-header" style="font-size: 12px; margin-top: 10px; margin-bottom: 6px; padding-bottom: 2px; font-weight: 700; border-bottom: 1px solid #ddd; color: #111;">2. ACCUSED PERSONAL ASSETS & IMMIGRATION WATCHLIST</div>
+                    <p class="legal-text-p" style="font-size: 11px; margin-bottom: 6px; line-height: 1.35; color: #111;">
                         Official verification from national transport registries, financial authorities, and immigration control watchlists returned the following metrics:
                     </p>
-                    <table class="legal-table">
+                    <table class="legal-table" style="margin-bottom: 12px; font-size: 10.5px; width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr>
-                                <th>Category</th>
-                                <th>Credential Verified</th>
-                                <th>Database Source</th>
-                                <th>Verified Output / Watch Status</th>
+                                <th style="padding: 4px 6px; text-align: left;">Category</th>
+                                <th style="padding: 4px 6px; text-align: left;">Credential Verified</th>
+                                <th style="padding: 4px 6px; text-align: left;">Database Source</th>
+                                <th style="padding: 4px 6px; text-align: left;">Verified Output / Watch Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Driving License (DL)</td>
-                                <td class="code">${d.accused.drivingLicense || 'N/A'}</td>
-                                <td>AP Transport Dept / Sarathi</td>
-                                <td><span style="color:#1a7a4a; font-weight:700;">✓ VALID & CLEAN</span></td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Driving License (DL)</td>
+                                <td class="code" style="padding: 4px 6px; border: 1px solid #cbd5e1; font-family: var(--font-mono); color: #111;">${d.accused.drivingLicense || 'N/A'}</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">AP Transport Dept / Sarathi</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1;"><span style="color:#1a7a4a; font-weight:700;">✓ VALID & CLEAN</span></td>
                             </tr>
                             <tr>
-                                <td>Passport Number</td>
-                                <td class="code">${d.accused.passportNumber || 'N/A'}</td>
-                                <td>Ministry of External Affairs</td>
-                                <td>${d.accused.travelRestricted ? '<span style="color:#c0392b; font-weight:700;">⚠️ WATCHLIST PREVENT DEPARTURE</span>' : '<span style="color:#1a7a4a; font-weight:700;">✓ NO ACTIVE IMMIGRATION WATCH</span>'}</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Passport Number</td>
+                                <td class="code" style="padding: 4px 6px; border: 1px solid #cbd5e1; font-family: var(--font-mono); color: #111;">${d.accused.passportNumber || 'N/A'}</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Ministry of External Affairs</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1;">${d.accused.travelRestricted ? '<span style="color:#c0392b; font-weight:700;">⚠️ WATCHLIST PREVENT DEPARTURE</span>' : '<span style="color:#1a7a4a; font-weight:700;">✓ NO ACTIVE IMMIGRATION WATCH</span>'}</td>
                             </tr>
                             <tr>
-                                <td>Declared Monthly Income</td>
-                                <td>₹${parseFloat(d.accused.monthlyIncome || 0).toLocaleString('en-IN')}</td>
-                                <td>Income Tax NSDL API</td>
-                                <td>Status: Verified Salaried/Business</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Declared Monthly Income</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">₹${parseFloat(d.accused.monthlyIncome || 0).toLocaleString('en-IN')}</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Income Tax NSDL API</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Status: Verified Salaried/Business</td>
                             </tr>
                             <tr>
-                                <td>Liquid Balance (6M Avg)</td>
-                                <td>₹${parseFloat(d.accused.bankBalance6m || 0).toLocaleString('en-IN')}</td>
-                                <td>FIU Banking Sync API</td>
-                                <td>Account: ${d.accused.bankAccount || 'N/A'}</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Liquid Balance (6M Avg)</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">₹${parseFloat(d.accused.bankBalance6m || 0).toLocaleString('en-IN')}</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">FIU Banking Sync API</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Account: ${d.accused.bankAccount || 'N/A'}</td>
                             </tr>
                             <tr>
-                                <td>CIBIL Credit Score</td>
-                                <td style="font-weight: 700; color: ${d.accused.cibilScore >= 700 ? '#1a7a4a' : d.accused.cibilScore >= 600 ? '#e67e22' : '#c0392b'};">${d.accused.cibilScore || 'N/A'}</td>
-                                <td>TransUnion CIBIL Bureau</td>
-                                <td>Credit risk rating is ${d.accused.cibilScore >= 700 ? 'EXCELLENT' : d.accused.cibilScore >= 600 ? 'MODERATE' : 'POOR'}</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">CIBIL Credit Score</td>
+                                <td style="font-weight: 700; padding: 4px 6px; border: 1px solid #cbd5e1; color: ${d.accused.cibilScore >= 700 ? '#1a7a4a' : d.accused.cibilScore >= 600 ? '#e67e22' : '#c0392b'};">${d.accused.cibilScore || 'N/A'}</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">TransUnion CIBIL Bureau</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Credit risk rating is ${d.accused.cibilScore >= 700 ? 'EXCELLENT' : d.accused.cibilScore >= 600 ? 'MODERATE' : 'POOR'}</td>
                             </tr>
                         </tbody>
                     </table>
                     
-                    <div class="legal-section-header">3. CRIME SEVERITY & EVIDENCE STRENGTH EVALUATION</div>
-                    <p class="legal-text-p">
+                    <div class="legal-section-header" style="font-size: 12px; margin-top: 10px; margin-bottom: 6px; padding-bottom: 2px; font-weight: 700; border-bottom: 1px solid #ddd; color: #111;">3. CRIME SEVERITY & EVIDENCE STRENGTH EVALUATION</div>
+                    <p class="legal-text-p" style="font-size: 11px; margin-bottom: 6px; line-height: 1.35; color: #111;">
                         Evaluation of offence categorization and prima facie evidence strength:
                     </p>
-                    <table class="legal-table">
+                    <table class="legal-table" style="margin-bottom: 12px; font-size: 10.5px; width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr>
-                                <th>Legal Parameter</th>
-                                <th>Case Value</th>
-                                <th>Statutory Definition / Severity Metric</th>
+                                <th style="padding: 4px 6px; text-align: left;">Legal Parameter</th>
+                                <th style="padding: 4px 6px; text-align: left;">Case Value</th>
+                                <th style="padding: 4px 6px; text-align: left;">Statutory Definition / Severity Metric</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Bailable Status</td>
-                                <td>${d.ipcSections.includes('302') ? '<span style="color:#c0392b; font-weight:700;">NON-BAILABLE</span>' : '<span style="color:#1a7a4a; font-weight:700;">BAILABLE UNDER CONDITIONS</span>'}</td>
-                                <td>Categorization under First Schedule of CrPC / BNSS</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Bailable Status</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1;">${d.ipcSections.includes('302') ? '<span style="color:#c0392b; font-weight:700;">NON-BAILABLE</span>' : '<span style="color:#1a7a4a; font-weight:700;">BAILABLE UNDER CONDITIONS</span>'}</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Categorization under First Schedule of CrPC / BNSS</td>
                             </tr>
                             <tr>
-                                <td>Charge Seriousness</td>
-                                <td>${d.ipcSections.includes('302') ? '<span style="color:#c0392b; font-weight:700;">CRITICAL (Murder Charge)</span>' : '<span style="color:#e67e22; font-weight:700;">MODERATE (Financial/Forgery)</span>'}</td>
-                                <td>Judged based on imprisonment terms and societal threat guidelines</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Charge Seriousness</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1;">${d.ipcSections.includes('302') ? '<span style="color:#c0392b; font-weight:700;">CRITICAL (Murder Charge)</span>' : '<span style="color:#e67e22; font-weight:700;">MODERATE (Financial/Forgery)</span>'}</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Judged based on imprisonment terms and societal threat guidelines</td>
                             </tr>
                             <tr>
-                                <td>Violence Involved</td>
-                                <td>${d.ipcSections.includes('302') ? 'HIGH (Physical Homicide / Extreme Violence)' : 'NONE / LOW (Economic / Documents only)'}</td>
-                                <td>Assessment of physical harm, injury, or co-conspirator weapons</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Violence Involved</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">${d.ipcSections.includes('302') ? 'HIGH (Physical Homicide / Extreme Violence)' : 'NONE / LOW (Economic / Documents only)'}</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Assessment of physical harm, injury, or co-conspirator weapons</td>
                             </tr>
                             <tr>
-                                <td>Evidence Strength Score</td>
-                                <td>${d.ipcSections.includes('302') ? '<span style="color:#1a7a4a; font-weight:700;">STRONG (Eye witness + forensic recovery)</span>' : '<span style="color:#e67e22; font-weight:700;">MODERATE (Circumstantial ledger match)</span>'}</td>
-                                <td>Composite score of police recovery statements and witness credibility</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Evidence Strength Score</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1;">${d.ipcSections.includes('302') ? '<span style="color:#1a7a4a; font-weight:700;">STRONG (Eye witness + forensic recovery)</span>' : '<span style="color:#e67e22; font-weight:700;">MODERATE (Circumstantial ledger match)</span>'}</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Composite score of police recovery statements and witness credibility</td>
                             </tr>
                         </tbody>
                     </table>
 
-                    <div class="legal-section-header">4. RISK SCORING & CRIMINAL RECORD HISTORY</div>
-                    <p class="legal-text-p">
+                    <div class="legal-section-header" style="font-size: 12px; margin-top: 10px; margin-bottom: 6px; padding-bottom: 2px; font-weight: 700; border-bottom: 1px solid #ddd; color: #111;">4. RISK SCORING & CRIMINAL RECORD HISTORY</div>
+                    <p class="legal-text-p" style="font-size: 11px; margin-bottom: 6px; line-height: 1.35; color: #111;">
                         The system executed a cross-jurisdiction query against the National Crime Records Bureau (NCRB) database and the eCourts platform.
                     </p>
-                    <table class="legal-table">
+                    <table class="legal-table" style="margin-bottom: 12px; font-size: 10.5px; width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr>
-                                <th>Registry Database</th>
-                                <th>Parameter Evaluated</th>
-                                <th>Verified Output</th>
-                                <th>Risk Impact</th>
+                                <th style="padding: 4px 6px; text-align: left;">Registry Database</th>
+                                <th style="padding: 4px 6px; text-align: left;">Parameter Evaluated</th>
+                                <th style="padding: 4px 6px; text-align: left;">Verified Output</th>
+                                <th style="padding: 4px 6px; text-align: left;">Risk Impact</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>NCRB FIR Database</td>
-                                <td>Prior Registered FIRs (India)</td>
-                                <td>${d.accused.ncrbCount} Active Case(s)</td>
-                                <td>Low to Moderate</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">NCRB FIR Database</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Prior Registered FIRs (India)</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">${d.accused.ncrbCount} Active Case(s)</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color:${d.accused.ncrbCount > 0 ? '#e67e22' : '#1a7a4a'}; font-weight: 600;">Low to Moderate</td>
                             </tr>
                             <tr>
-                                <td>eCourts Registry</td>
-                                <td>Previous Bail Applications</td>
-                                <td>${d.accused.prevBailsGranted} Granted, ${d.accused.prevBailsHonored} Fulfilled</td>
-                                <td>No Default Flags</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">eCourts Registry</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Previous Bail Applications</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">${d.accused.prevBailsGranted} Granted, ${d.accused.prevBailsHonored} Fulfilled</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color:#1a7a4a; font-weight: 600;">No Default Flags</td>
                             </tr>
                             <tr>
-                                <td>State Intelligence</td>
-                                <td>Absconding & Non-Appearance</td>
-                                <td>${d.accused.abscondingCount} Failures to Appear</td>
-                                <td>Critical Flag</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">State Intelligence</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Absconding & Non-Appearance</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">${d.accused.abscondingCount} Failures to Appear</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color:${d.accused.abscondingCount > 0 ? '#c0392b' : '#1a7a4a'}; font-weight: 600;">${d.accused.abscondingCount > 0 ? 'Critical Flag' : 'No Default'}</td>
                             </tr>
                             <tr>
-                                <td>Immigration Watch</td>
-                                <td>Immigration Watch & Travel Restriction</td>
-                                <td>${d.accused.travelRestricted ? 'TRAVEL RESTRICTED' : 'CLEAR / NO WATCH'}</td>
-                                <td>High Alert</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Immigration Watch</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">Immigration Watch & Travel Restriction</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color: #111;">${d.accused.travelRestricted ? 'TRAVEL RESTRICTED' : 'CLEAR / NO WATCH'}</td>
+                                <td style="padding: 4px 6px; border: 1px solid #cbd5e1; color:${d.accused.travelRestricted ? '#c0392b' : '#1a7a4a'}; font-weight: 600;">${d.accused.travelRestricted ? 'High Alert' : 'No Watch'}</td>
                             </tr>
                         </tbody>
                     </table>
                     
-                    <p class="legal-text-p" style="margin-top: 10px;">
-                        <strong>Risk Assessment Conclusion:</strong> The composite Risk Score is calculated at <strong>${d.checks.risk.score}/100</strong>, indicating a <strong>${d.checks.risk.riskLevel} RISK</strong> level.
+                    <p class="legal-text-p" style="margin-top: 8px; margin-bottom: 10px; font-size: 11px; color: #111;">
+                        <strong>Risk Assessment Conclusion:</strong> The composite Risk Score is calculated at <strong style="color: ${d.checks.risk.score >= 70 ? '#c0392b' : d.checks.risk.score >= 40 ? '#e67e22' : '#1a7a4a'}; font-size:12px;">${d.checks.risk.score}/100</strong>, indicating a <strong>${d.checks.risk.riskLevel} RISK</strong> level.
                     </p>
                     
-                    <div class="legal-section-header">5. SYSTEM LEGAL RECOMMENDATION</div>
-                    <div style="background-color: #f7f3ec; border-left: 4px solid #c9a84c; padding: 12px; font-size: 13px; font-weight:600; margin-bottom: 14px;">
+                    <div class="legal-section-header" style="font-size: 12px; margin-top: 10px; margin-bottom: 6px; padding-bottom: 2px; font-weight: 700; border-bottom: 1px solid #ddd; color: #111;">5. SYSTEM LEGAL RECOMMENDATION</div>
+                    <div style="background-color: #f7f3ec; border-left: 4px solid #c9a84c; padding: 10px 14px; font-size: 12px; font-weight:700; margin-bottom: 8px; color: #000;">
                         ADVICE: ${d.checks.recommendation.verdict.replace(/_/g, ' ')}
                     </div>
-                    <p class="legal-text-p">
+                    <p class="legal-text-p" style="font-size: 11px; margin-bottom: 0; line-height: 1.35; color: #111;">
                         <strong>Reasoning:</strong> ${d.checks.recommendation.reasoningEn}
                     </p>
                 `;
