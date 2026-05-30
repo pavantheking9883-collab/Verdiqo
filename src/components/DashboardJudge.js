@@ -16,15 +16,30 @@ export const DashboardJudge = {
             state.selectedCaseNumber = selectedCase.caseNumber;
         }
 
+        // Initialize active mobile view tab if not set
+        if (!state.judgeActiveMobileTab) {
+            state.judgeActiveMobileTab = 'listings'; // 'listings' or 'details'
+        }
+
         // Render Sidebar and Detail Layout
         container.innerHTML = `
-            <div class="judge-container">
+            <!-- Responsive Mobile Tab Switcher (Visible only on mobile via CSS) -->
+            <div class="judge-mobile-tabs" style="display: none; margin-bottom: 16px; background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 6px; gap: 8px;">
+                <button class="btn mobile-tab-btn" id="judge-m-tab-listings" style="flex: 1; padding: 10px; font-size: 13px; text-align: center; border: 1px solid ${state.judgeActiveMobileTab === 'listings' ? 'var(--color-gold)' : 'var(--color-border)'}; background: ${state.judgeActiveMobileTab === 'listings' ? 'rgba(201, 168, 76, 0.1)' : 'transparent'}; color: ${state.judgeActiveMobileTab === 'listings' ? 'var(--color-gold-light)' : 'var(--color-text-muted)'}; font-weight: 700;">
+                    ${state.translate("Hearings List", "सुनवाई सूची")}
+                </button>
+                <button class="btn mobile-tab-btn" id="judge-m-tab-details" style="flex: 1; padding: 10px; font-size: 13px; text-align: center; border: 1px solid ${state.judgeActiveMobileTab === 'details' ? 'var(--color-gold)' : 'var(--color-border)'}; background: ${state.judgeActiveMobileTab === 'details' ? 'rgba(201, 168, 76, 0.1)' : 'transparent'}; color: ${state.judgeActiveMobileTab === 'details' ? 'var(--color-gold-light)' : 'var(--color-text-muted)'}; font-weight: 700;">
+                    ${state.translate("Case Assessment", "मामला मूल्यांकन")}
+                </button>
+            </div>
+
+            <div class="judge-container ${state.judgeActiveMobileTab}">
                 <!-- LEFT SIDEBAR: HEARING LIST -->
                 <div class="hearing-list-sidebar">
                     <div class="sidebar-title" style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="display:flex; align-items:center; gap:6px;">
                             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                            <span>Today's Hear Listings</span>
+                            <span>${state.translate("Today's Hear Listings", "आज की सुनवाई सूची")}</span>
                         </span>
                         <span class="badge" style="background-color: var(--color-gold-dim); color: #ffffff; font-family: var(--font-mono); white-space: nowrap; padding: 3px 8px; border-radius: 4px; display: inline-block;">${state.cases.length} Listings</span>
                     </div>
@@ -35,6 +50,21 @@ export const DashboardJudge = {
                 <div class="hearing-detail-view" id="judge-hearing-detail"></div>
             </div>
         `;
+
+        // Bind Mobile Tab Click Events
+        const tabListings = container.querySelector('#judge-m-tab-listings');
+        const tabDetails = container.querySelector('#judge-m-tab-details');
+        
+        if (tabListings && tabDetails) {
+            tabListings.addEventListener('click', () => {
+                state.judgeActiveMobileTab = 'listings';
+                onUpdate();
+            });
+            tabDetails.addEventListener('click', () => {
+                state.judgeActiveMobileTab = 'details';
+                onUpdate();
+            });
+        }
 
         this.renderHearingList(container.querySelector('#judge-hearing-list'), state, onUpdate);
         this.renderCaseDetail(container.querySelector('#judge-hearing-detail'), selectedCase, state, onUpdate);
@@ -115,6 +145,8 @@ export const DashboardJudge = {
             item.addEventListener('click', (e) => {
                 const caseNo = e.currentTarget.getAttribute('data-case');
                 state.selectedCaseNumber = caseNo;
+                // Automatically switch active mobile view to details
+                state.judgeActiveMobileTab = 'details';
                 onUpdate();
             });
         });
@@ -543,6 +575,8 @@ export const DashboardJudge = {
                 if (nextPending) {
                     state.selectedCaseNumber = nextPending.caseNumber;
                 }
+                // Switch mobile tab back to listings so they can pick another case
+                state.judgeActiveMobileTab = 'listings';
                 onUpdate();
             });
         });

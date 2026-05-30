@@ -1733,6 +1733,9 @@ body.light-theme .report-document-body {
   .form-grid-3 {
     grid-template-columns: 1fr 1fr;
   }
+  .stats-grid-container {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 768px) {
@@ -1745,6 +1748,115 @@ body.light-theme .report-document-body {
   .case-panels-layout {
     grid-template-columns: 1fr;
   }
+  .arguments-box {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  /* Judge Dashboard Mobile Tabs Layout */
+  .judge-mobile-tabs {
+    display: flex !important;
+  }
+  .judge-container.listings .hearing-list-sidebar {
+    display: block !important;
+  }
+  .judge-container.listings .hearing-detail-view {
+    display: none !important;
+  }
+  .judge-container.details .hearing-list-sidebar {
+    display: none !important;
+  }
+  .judge-container.details .hearing-detail-view {
+    display: block !important;
+  }
+  .hearing-list-sidebar {
+    width: 100% !important;
+  }
+  .hearing-detail-view {
+    width: 100% !important;
+  }
+  .adjudication-options {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .top-navbar {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 16px;
+  }
+  .brand-section {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
+  }
+  .brand-titles h1 {
+    font-size: 17px;
+  }
+  .brand-titles p {
+    font-size: 10px;
+  }
+  .nav-buttons-container {
+    justify-content: center;
+    width: 100%;
+  }
+  .stats-grid-container {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .biometric-capture-zone {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .adjudication-options {
+    grid-template-columns: 1fr !important;
+  }
+  .signature-section {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    text-align: center !important;
+  }
+  .signature-box {
+    margin: 0 auto 10px auto !important;
+  }
+  .citizen-dashboard-wrapper {
+    padding: 0 !important;
+    width: 100% !important;
+  }
+  .phone-frame {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: calc(100vh - 120px) !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+  .phone-header-notch {
+    display: none !important;
+  }
+  
+  .legal-page-sheet {
+    padding: 20px !important;
+  }
+  .modal-content-container {
+    max-height: 95vh !important;
+    border-radius: 4px !important;
+  }
+  .report-document-body {
+    padding: 10px !important;
+  }
+}
+
+/* Ensure horizontal scroll on data tables for mobile compatibility */
+.data-table-wrapper {
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 /* ==========================================================================
