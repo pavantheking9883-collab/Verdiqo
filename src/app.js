@@ -670,12 +670,20 @@ class ApplicationState {
                 { id: 7, name: '7. Bail Satisfaction & Release Certificate' }
             ];
             
-            const promptHtml = reports.map(r => `
-                <button class="btn btn-primary btn-trigger-print-doc" data-id="${r.id}" style="width:100%; text-align:left; padding: 12px 20px; font-size:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                    <span>${r.name}</span>
-                    <span>➔</span>
-                </button>
-            `).join('');
+            const lastViewedId = this.lastViewedReportId || null;
+            const promptHtml = reports.map(r => {
+                const isLastViewed = r.id === lastViewedId;
+                const activeStyle = isLastViewed 
+                    ? `border: 2px solid var(--color-gold); background-color: rgba(201, 168, 76, 0.15) !important; color: var(--color-gold-light) !important; font-weight: 700;`
+                    : ``;
+                const labelSuffix = isLastViewed ? ` <span class="badge" style="background-color: var(--color-gold-dim); color: #ffffff; font-size: 10.5px; margin-left: 10px; padding: 2px 6px; border-radius: 4px; border:none; display:inline-block;">ACTIVE</span>` : '';
+                return `
+                    <button class="btn btn-primary btn-trigger-print-doc" data-id="${r.id}" style="width:100%; text-align:left; padding: 12px 20px; font-size:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; ${activeStyle}">
+                        <span>${r.name}${labelSuffix}</span>
+                        <span>➔</span>
+                    </button>
+                `;
+            }).join('');
 
             const reportSelector = document.createElement('div');
             reportSelector.id = 'report-selection-modal';
@@ -701,7 +709,10 @@ class ApplicationState {
                 btn.addEventListener('click', (e) => {
                     const id = parseInt(e.currentTarget.getAttribute('data-id'));
                     reportSelector.remove();
-                    ReportViewer.show(id, caseRecord, () => {});
+                    this.lastViewedReportId = id;
+                    ReportViewer.show(id, caseRecord, () => {}, () => {
+                        this.openReportViewer(caseRecord);
+                    });
                 });
             });
         } else {
@@ -733,7 +744,7 @@ function updateUI() {
                     <div class="brand-logo-box">⚖️</div>
                     <div class="brand-titles">
                         <h1>Bail Management System</h1>
-                        <p>QUANTEX INTELLIGENCE SYSTEMS · Rajamundry, AP</p>
+                        <p>QUANTEX INTELLIGENCE SYSTEMS</p>
                     </div>
                 </div>
                 
@@ -835,7 +846,7 @@ function renderLoginPortal(root) {
                         <div class="brand-logo-box">⚖️</div>
                         <div class="brand-titles">
                             <h1>Bail Management System</h1>
-                            <p>QUANTEX INTELLIGENCE SYSTEMS · Rajamundry, AP</p>
+                            <p>QUANTEX INTELLIGENCE SYSTEMS</p>
                         </div>
                     </div>
                     <div class="nav-buttons-container">

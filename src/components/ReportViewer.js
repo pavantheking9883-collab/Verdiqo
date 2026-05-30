@@ -8,7 +8,7 @@ export const ReportViewer = {
     /**
      * Generates a modal container and inserts the report HTML
      */
-    show(reportId, caseData, onClose) {
+    show(reportId, caseData, onClose, onBack = null) {
         // Remove existing modal if any
         const existing = document.getElementById('report-modal-overlay');
         if (existing) existing.remove();
@@ -28,11 +28,18 @@ export const ReportViewer = {
             case 7: reportTitle = 'Bail Satisfaction & Release Certificate'; break;
         }
 
+        const backButtonHtml = onBack 
+            ? `<button id="back-report-btn" class="btn btn-secondary" style="padding: 6px 12px; font-size: 13px; display:inline-flex; align-items:center; justify-content:center; gap:6px; background-color: var(--color-border); border-color: var(--color-border); color: var(--color-text-main); margin-right: 8px;">
+                <span>◀ Back to List</span>
+               </button>`
+            : '';
+
         overlay.innerHTML = `
             <div class="modal-content-container">
                 <div class="modal-top-actions">
                     <h3>${reportTitle}</h3>
                     <div style="display: flex; gap: 12px; align-items: center;">
+                        ${backButtonHtml}
                         <button id="print-report-btn" class="btn btn-primary" style="padding: 6px 12px; font-size: 13px; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
                             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
                             <span>Print Document</span>
@@ -89,6 +96,13 @@ export const ReportViewer = {
             overlay.remove();
             if (onClose) onClose();
         });
+
+        if (onBack) {
+            overlay.querySelector('#back-report-btn').addEventListener('click', () => {
+                overlay.remove();
+                onBack();
+            });
+        }
 
         overlay.querySelector('#print-report-btn').addEventListener('click', () => {
             window.print();
