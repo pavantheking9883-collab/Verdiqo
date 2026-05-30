@@ -1518,8 +1518,8 @@ body.light-theme .report-document-body {
 
 .legal-page-sheet {
   font-family: var(--font-legal);
-  background-color: #ffffff;
-  color: #111111;
+  background-color: #ffffff !important;
+  color: #111111 !important;
   width: 100%;
   max-width: 760px;
   padding: 40px;
@@ -1640,19 +1640,22 @@ body.light-theme .report-document-body {
   border-collapse: collapse;
   margin-bottom: 16px;
   font-size: 12px;
+  background-color: #ffffff !important;
 }
 
 .legal-table th {
-  background-color: #f1f1f1;
-  color: #333;
-  padding: 6px 10px;
-  border: 1px solid #ddd;
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1 !important;
   font-weight: 700;
 }
 
 .legal-table td {
-  padding: 6px 10px;
-  border: 1px solid #ddd;
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  padding: 8px 12px;
+  border: 1px solid #cbd5e1 !important;
 }
 
 .legal-signatures-block {
