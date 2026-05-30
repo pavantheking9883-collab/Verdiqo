@@ -25,6 +25,7 @@ export const ReportViewer = {
             case 4: reportTitle = 'Order of Bail Adjudication (Draft)'; break;
             case 5: reportTitle = 'Post-Bail Compliance Tracking & Alerts Log'; break;
             case 6: reportTitle = 'Quantex Smart Analytics & Statistical Report'; break;
+            case 7: reportTitle = 'Bail Satisfaction & Release Certificate'; break;
         }
 
         overlay.innerHTML = `
@@ -150,8 +151,91 @@ export const ReportViewer = {
                         The accused’s Aadhaar credential was queried via the UIDAI API. Core biometrics (10 fingerprints and dual iris scans) were successfully validated at the counter. 
                         Status is marked as: <strong>${d.checks.identity.status === 'GREEN' ? 'IDENTITY FULLY CONFIRMED' : 'REJECTED/ALERT RAISED'}</strong>.
                     </p>
+
+                    <div class="legal-section-header">2. ACCUSED PERSONAL ASSETS & IMMIGRATION WATCHLIST</div>
+                    <p class="legal-text-p">
+                        Official verification from national transport registries, financial authorities, and immigration control watchlists returned the following metrics:
+                    </p>
+                    <table class="legal-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Credential Verified</th>
+                                <th>Database Source</th>
+                                <th>Verified Output / Watch Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Driving License (DL)</td>
+                                <td class="code">${d.accused.drivingLicense || 'N/A'}</td>
+                                <td>AP Transport Dept / Sarathi</td>
+                                <td><span style="color:#1a7a4a; font-weight:700;">✓ VALID & CLEAN</span></td>
+                            </tr>
+                            <tr>
+                                <td>Passport Number</td>
+                                <td class="code">${d.accused.passportNumber || 'N/A'}</td>
+                                <td>Ministry of External Affairs</td>
+                                <td>${d.accused.travelRestricted ? '<span style="color:#c0392b; font-weight:700;">⚠️ WATCHLIST PREVENT DEPARTURE</span>' : '<span style="color:#1a7a4a; font-weight:700;">✓ NO ACTIVE IMMIGRATION WATCH</span>'}</td>
+                            </tr>
+                            <tr>
+                                <td>Declared Monthly Income</td>
+                                <td>₹${parseFloat(d.accused.monthlyIncome || 0).toLocaleString('en-IN')}</td>
+                                <td>Income Tax NSDL API</td>
+                                <td>Status: Verified Salaried/Business</td>
+                            </tr>
+                            <tr>
+                                <td>Liquid Balance (6M Avg)</td>
+                                <td>₹${parseFloat(d.accused.bankBalance6m || 0).toLocaleString('en-IN')}</td>
+                                <td>FIU Banking Sync API</td>
+                                <td>Account: ${d.accused.bankAccount || 'N/A'}</td>
+                            </tr>
+                            <tr>
+                                <td>CIBIL Credit Score</td>
+                                <td style="font-weight: 700; color: ${d.accused.cibilScore >= 700 ? '#1a7a4a' : d.accused.cibilScore >= 600 ? '#e67e22' : '#c0392b'};">${d.accused.cibilScore || 'N/A'}</td>
+                                <td>TransUnion CIBIL Bureau</td>
+                                <td>Credit risk rating is ${d.accused.cibilScore >= 700 ? 'EXCELLENT' : d.accused.cibilScore >= 600 ? 'MODERATE' : 'POOR'}</td>
+                            </tr>
+                        </tbody>
+                    </table>
                     
-                    <div class="legal-section-header">2. RISK SCORING & CRIMINAL RECORD HISTORY</div>
+                    <div class="legal-section-header">3. CRIME SEVERITY & EVIDENCE STRENGTH EVALUATION</div>
+                    <p class="legal-text-p">
+                        Evaluation of offence categorization and prima facie evidence strength:
+                    </p>
+                    <table class="legal-table">
+                        <thead>
+                            <tr>
+                                <th>Legal Parameter</th>
+                                <th>Case Value</th>
+                                <th>Statutory Definition / Severity Metric</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Bailable Status</td>
+                                <td>${d.ipcSections.includes('302') ? '<span style="color:#c0392b; font-weight:700;">NON-BAILABLE</span>' : '<span style="color:#1a7a4a; font-weight:700;">BAILABLE UNDER CONDITIONS</span>'}</td>
+                                <td>Categorization under First Schedule of CrPC / BNSS</td>
+                            </tr>
+                            <tr>
+                                <td>Charge Seriousness</td>
+                                <td>${d.ipcSections.includes('302') ? '<span style="color:#c0392b; font-weight:700;">CRITICAL (Murder Charge)</span>' : '<span style="color:#e67e22; font-weight:700;">MODERATE (Financial/Forgery)</span>'}</td>
+                                <td>Judged based on imprisonment terms and societal threat guidelines</td>
+                            </tr>
+                            <tr>
+                                <td>Violence Involved</td>
+                                <td>${d.ipcSections.includes('302') ? 'HIGH (Physical Homicide / Extreme Violence)' : 'NONE / LOW (Economic / Documents only)'}</td>
+                                <td>Assessment of physical harm, injury, or co-conspirator weapons</td>
+                            </tr>
+                            <tr>
+                                <td>Evidence Strength Score</td>
+                                <td>${d.ipcSections.includes('302') ? '<span style="color:#1a7a4a; font-weight:700;">STRONG (Eye witness + forensic recovery)</span>' : '<span style="color:#e67e22; font-weight:700;">MODERATE (Circumstantial ledger match)</span>'}</td>
+                                <td>Composite score of police recovery statements and witness credibility</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="legal-section-header">4. RISK SCORING & CRIMINAL RECORD HISTORY</div>
                     <p class="legal-text-p">
                         The system executed a cross-jurisdiction query against the National Crime Records Bureau (NCRB) database and the eCourts platform.
                     </p>
@@ -196,7 +280,7 @@ export const ReportViewer = {
                         <strong>Risk Assessment Conclusion:</strong> The composite Risk Score is calculated at <strong>${d.checks.risk.score}/100</strong>, indicating a <strong>${d.checks.risk.riskLevel} RISK</strong> level.
                     </p>
                     
-                    <div class="legal-section-header">3. SYSTEM LEGAL RECOMMENDATION</div>
+                    <div class="legal-section-header">5. SYSTEM LEGAL RECOMMENDATION</div>
                     <div style="background-color: #f7f3ec; border-left: 4px solid #c9a84c; padding: 12px; font-size: 13px; font-weight:600; margin-bottom: 14px;">
                         ADVICE: ${d.checks.recommendation.verdict.replace(/_/g, ' ')}
                     </div>
@@ -206,64 +290,166 @@ export const ReportViewer = {
                 `;
             
             case 2: // Surety Verification Report
-                return `
-                    <div class="document-title-block">
-                        <h3>Surety Verification & Capacity Report</h3>
-                    </div>
-                    
-                    <div class="legal-metadata-grid">
-                        <div class="meta-field">
-                            <span class="meta-lbl">Surety Name:</span>
-                            <span class="meta-val">${d.surety.fullName}</span>
+                if (d.surety.suretyType === 'INDIVIDUAL') {
+                    return `
+                        <div class="document-title-block">
+                            <h3>Surety Solvency & Capacity Report</h3>
+                            <p style="font-size: 11px; margin-top: 2px;">INDIVIDUAL GUARANTOR CAPACITY ASSESSMENT</p>
                         </div>
-                        <div class="meta-field">
-                            <span class="meta-lbl">Relation:</span>
-                            <span class="meta-val">${d.surety.relationToAccused}</span>
+                        
+                        <div class="legal-metadata-grid">
+                            <div class="meta-field">
+                                <span class="meta-lbl">Surety Name:</span>
+                                <span class="meta-val">${d.surety.fullName}</span>
+                            </div>
+                            <div class="meta-field">
+                                <span class="meta-lbl">Relation to Accused:</span>
+                                <span class="meta-val">${d.surety.relationToAccused}</span>
+                            </div>
+                            <div class="meta-field">
+                                <span class="meta-lbl">Aadhaar Number:</span>
+                                <span class="meta-val code">${d.surety.aadhaarNumber.substring(0,4)}-XXXX-XXXX</span>
+                            </div>
+                            <div class="meta-field">
+                                <span class="meta-lbl">PAN Number:</span>
+                                <span class="meta-val code">${d.surety.panNumber}</span>
+                            </div>
+                            <div class="meta-field">
+                                <span class="meta-lbl">Proposed Bail:</span>
+                                <span class="meta-val" style="font-family: var(--font-mono); font-weight:700;">₹${proposedBail.toLocaleString('en-IN')}</span>
+                            </div>
+                            <div class="meta-field">
+                                <span class="meta-lbl">Employment Type:</span>
+                                <span class="meta-val">${d.surety.employmentDetails}</span>
+                            </div>
                         </div>
-                        <div class="meta-field">
-                            <span class="meta-lbl">Aadhaar Number:</span>
-                            <span class="meta-val code">${d.surety.aadhaarNumber}</span>
+                        
+                        <div class="legal-section-header">1. BIOMETRIC & IDENTITY CHECK</div>
+                        <p class="legal-text-p">
+                            Surety biometrics were captured at the counter. Fingerprint and iris matching returned a <strong>100% MATCH</strong> status against UIDAI archives. No proxy or identity fraud detected.
+                        </p>
+                        
+                        <div class="legal-section-header">2. FINANCIAL CAPACITY STATEMENT</div>
+                        <p class="legal-text-p">
+                            Automated checks integrated with the NSDL ITR database and CIBIL score registries returned the following assets and liquid balances:
+                        </p>
+                        <ul class="legal-list">
+                            <li><strong>Verified Monthly Employment Income:</strong> ₹${suretyIncome.toLocaleString('en-IN')} per month.</li>
+                            <li><strong>Average 3-Year Income Tax Returns:</strong> Verified average at ₹${(suretyIncome * 12 * 0.95).toLocaleString('en-IN')} per annum.</li>
+                            <li><strong>CIBIL Credit Score:</strong> ${cibil} (Low defaults risk registered).</li>
+                            <li><strong>Calculated Financial Status:</strong> <span style="text-decoration: underline; font-weight:700;">${d.checks.finance.status}</span>.</li>
+                        </ul>
+                        
+                        <div class="legal-section-header">3. CROSS-COURT SURETY LOAD ASSESSMENT</div>
+                        <p class="legal-text-p">
+                            The National Surety Ledger has scanned all sub-divisional and district courts across Andhra Pradesh.
+                        </p>
+                        <ul class="legal-list">
+                            <li><strong>Active Bail Guarantees Held:</strong> ${suretyBails} (Legal maximum allowed is 2 active).</li>
+                            <li><strong>Previous Obligation Defaults:</strong> 0 Defaults registered in the court registers.</li>
+                            <li><strong>Status Verdict:</strong> <strong>${d.checks.suretyLoad.status === 'CLEAR' ? 'APPROVED FOR OBLIGATION' : 'DISQUALIFIED/WARNING'}</strong>.</li>
+                        </ul>
+
+                        <div class="legal-section-header">4. CAPABILITY EVALUATION VERDICT</div>
+                        <div style="background-color: #f7f3ec; border-left: 4px solid #1a7a4a; padding: 12px; font-size: 13.5px; font-weight:700; display:flex; justify-content:space-between;">
+                            <span>SURETY ACCEPTANCE STATUS:</span>
+                            <span style="color:#1a7a4a;">[ ACCEPT - SOLVENCY SUFFICIENT ]</span>
                         </div>
-                        <div class="meta-field">
-                            <span class="meta-lbl">PAN Number:</span>
-                            <span class="meta-val code">${d.surety.panNumber}</span>
+                        <p class="legal-text-p" style="margin-top: 8px;">
+                            The guarantor displays a verifiable stream of income that comfortably satisfies the court's solvency requirements. No prior default risks or multiple active loads are registered.
+                        </p>
+                    `;
+                } else {
+                    return `
+                        <div class="document-title-block">
+                            <h3>Surety Verification & Capacity Report</h3>
+                            <p style="font-size: 11px; margin-top: 2px;">PROPERTY ASSET VALUE & MUTATION ASSESSMENT</p>
                         </div>
-                        <div class="meta-field">
-                            <span class="meta-lbl">Proposed Bail:</span>
-                            <span class="meta-val" style="font-family: var(--font-mono);">₹${proposedBail.toLocaleString('en-IN')}</span>
+                        
+                        <div class="legal-metadata-grid">
+                            <div class="meta-field">
+                                <span class="meta-lbl">Pledged Owner Name:</span>
+                                <span class="meta-val">${d.surety.fullName}</span>
+                            </div>
+                            <div class="meta-field">
+                                <span class="meta-lbl">Relation to Accused:</span>
+                                <span class="meta-val">${d.surety.relationToAccused}</span>
+                            </div>
+                            <div class="meta-field">
+                                <span class="meta-lbl">Land Survey Number:</span>
+                                <span class="meta-val code">${d.surety.surveyNumber || 'Sy. RS-104/12-A'}</span>
+                            </div>
+                            <div class="meta-field">
+                                <span class="meta-lbl">Revenue Patta No:</span>
+                                <span class="meta-val code">${d.surety.propertyRevenueRecord || 'P-8472-RJM'}</span>
+                            </div>
+                            <div class="meta-field">
+                                <span class="meta-lbl">Proposed Bail Bond:</span>
+                                <span class="meta-val" style="font-family: var(--font-mono); font-weight:700;">₹${proposedBail.toLocaleString('en-IN')}</span>
+                            </div>
+                            <div class="meta-field">
+                                <span class="meta-lbl">Land Valuation:</span>
+                                <span class="meta-val" style="font-family: var(--font-mono); color:#1a7a4a; font-weight:700;">₹${parseFloat(d.surety.propertyValuation || 0).toLocaleString('en-IN')}</span>
+                            </div>
                         </div>
-                        <div class="meta-field">
-                            <span class="meta-lbl">Verified Assets:</span>
-                            <span class="meta-val" style="font-family: var(--font-mono); color:#1a7a4a;">₹${parseFloat(d.surety.propertyValuation || 0).toLocaleString('en-IN')}</span>
+                        
+                        <div class="legal-section-header">1. PROPERTY TITLE & DEED AUTHENTICITY</div>
+                        <p class="legal-text-p">
+                            The title deed ID <strong>${d.surety.propertyOwnershipDoc || 'TD-2026-RJM-482'}</strong> was verified through a secure API query to the Registration and Stamps Department. 
+                            The ownership matches the surety’s name and is confirmed free of any active litigations.
+                        </p>
+                        
+                        <div class="legal-section-header">2. LAND REVENUE & ENCUMBRANCE STATUS</div>
+                        <p class="legal-text-p">
+                            Automated land ledger query through the Webland/Adangal Portal returned the following parameters:
+                        </p>
+                        <table class="legal-table">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Government Database Value</th>
+                                    <th>Court Validation Check</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Patta/Khata ID</td>
+                                    <td class="code">${d.surety.propertyRevenueRecord || 'P-8472-RJM'}</td>
+                                    <td><span style="color:#1a7a4a; font-weight:700;">✓ Matches Revenue Records</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Land Classification</td>
+                                    <td>Wet/Dry Agriculture (Patta Land)</td>
+                                    <td>✓ Eligible for Bail Guarantee</td>
+                                </tr>
+                                <tr>
+                                    <td>Property Valuation</td>
+                                    <td style="font-family: var(--font-mono);">₹${parseFloat(d.surety.propertyValuation || 0).toLocaleString('en-IN')}</td>
+                                    <td><span style="color:#1a7a4a; font-weight:700;">✓ Value exceeds bail bond (${Math.round((d.surety.propertyValuation / proposedBail) * 100)}%)</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Encumbrance Status</td>
+                                    <td style="font-weight:700; color:${d.surety.encumbranceStatus === 'CLEAN' ? '#1a7a4a' : '#c0392b'};">${d.surety.encumbranceStatus || 'CLEAN'}</td>
+                                    <td>${d.surety.encumbranceStatus === 'CLEAN' ? '<span style="color:#1a7a4a; font-weight:700;">✓ CLEAR (No Prior Mortgages)</span>' : '<span style="color:#c0392b; font-weight:700;">⚠️ WARNING (Lien Already Active)</span>'}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                        <div class="legal-section-header">3. MUTATION STATUS</div>
+                        <p class="legal-text-p">
+                            Upon order submission, direct XML hooks mutate the Mandal land register. Mutation status is currently marked as: 
+                            <strong>${d.surety.mutationStatus === 'COMPLETED' ? '<span style="color:#1a7a4a;">✓ ACTIVE BAIL ENCUMBRANCE MUTATED & REGISTERED</span>' : '<span style="color:#f39c12;">AWAITING ADJUDICATION ACTION / PENDING MUTATION</span>'}</strong>.
+                        </p>
+
+                        <div class="legal-section-header">4. CAPABILITY EVALUATION VERDICT</div>
+                        <div style="background-color: #f7f3ec; border-left: 4px solid #1a7a4a; padding: 12px; font-size: 13.5px; font-weight:700; display:flex; justify-content:space-between;">
+                            <span>SURETY ACCEPTANCE STATUS:</span>
+                            <span style="color:${d.surety.encumbranceStatus === 'CLEAN' ? '#1a7a4a' : '#c0392b'};">
+                                ${d.surety.encumbranceStatus === 'CLEAN' ? '[ ACCEPT - PROPERTY LIEN VIABLE ]' : '[ REJECT - ENCUMBERED PROPERTY ]'}
+                            </span>
                         </div>
-                    </div>
-                    
-                    <div class="legal-section-header">1. BIOMETRIC & IDENTITY CHECK</div>
-                    <p class="legal-text-p">
-                        Surety biometrics were captured at the counter. Fingerprint and iris matching returned a <strong>100% MATCH</strong> status against UIDAI archives. No proxy or identity fraud detected.
-                    </p>
-                    
-                    <div class="legal-section-header">2. FINANCIAL CAPACITY STATEMENT</div>
-                    <p class="legal-text-p">
-                        Automated checks integrated with the NSDL ITR database and CIBIL score registries returned the following assets and liquid balances:
-                    </p>
-                    <ul class="legal-list">
-                        <li><strong>Verified Monthly Employment Income:</strong> ₹${suretyIncome.toLocaleString('en-IN')} per month.</li>
-                        <li><strong>Average 3-Year Income Tax Returns:</strong> Verified average at ₹${(suretyIncome * 12 * 0.95).toLocaleString('en-IN')} per annum.</li>
-                        <li><strong>CIBIL Credit Score:</strong> ${cibil} (Low defaults risk registered).</li>
-                        <li><strong>Calculated Financial Status:</strong> <span style="text-decoration: underline; font-weight:700;">${d.checks.finance.status}</span>.</li>
-                    </ul>
-                    
-                    <div class="legal-section-header">3. CROSS-COURT SURETY LOAD ASSESSMENT</div>
-                    <p class="legal-text-p">
-                        The National Surety Ledger has scanned all sub-divisional and district courts across Andhra Pradesh.
-                    </p>
-                    <ul class="legal-list">
-                        <li><strong>Active Bail Guarantees Held:</strong> ${suretyBails} (Legal maximum allowed is 2 active).</li>
-                        <li><strong>Previous Obligation Defaults:</strong> 0 Defaults registered in the court registers.</li>
-                        <li><strong>Status Verdict:</strong> <strong>${d.checks.suretyLoad.status === 'CLEAR' ? 'APPROVED FOR OBLIGATION' : 'DISQUALIFIED/WARNING'}</strong>.</li>
-                    </ul>
-                `;
+                    `;
+                }
 
             case 3: // Property Mutation Request
                 return `
@@ -498,6 +684,65 @@ export const ReportViewer = {
                     <p class="legal-text-p" style="font-size: 11px; color:#555; text-align:center; margin-top: 10px;">
                         This statistical data conforms with standard reporting protocols for the High Court of Andhra Pradesh.
                     </p>
+                `;
+
+            case 7: // Bail Satisfaction & Release Certificate (NEW)
+                return `
+                    <div class="document-title-block">
+                        <h3>Bail Satisfaction & Release Certificate</h3>
+                        <p style="font-size: 11px; margin-top: 4px;">FORM 22 - STATE REVENUE DEPARTMENT MUTATION RELEASE DIRECTIVE</p>
+                    </div>
+                    
+                    <p class="legal-text-p">
+                        To,<br/>
+                        <strong>The Tahsildar / Mandal Revenue Officer</strong><br/>
+                        Rajamundry Urban Mandal, East Godavari District, Andhra Pradesh.
+                    </p>
+                    
+                    <p class="legal-text-p" style="margin-top: 14px;">
+                        <strong>SUBJECT:</strong> Expunging and Satisfaction of Bail Encumbrance (Mutation Release Order).
+                    </p>
+                    
+                    <p class="legal-text-p">
+                        It is hereby certified that the bail conditions and financial obligations imposed upon the accused, <strong>${d.accused.fullName}</strong> in case number <strong>${d.caseNumber}</strong>, have been fully satisfied or the bail has been formally discharged by the order of this Hon’ble Court.
+                    </p>
+                    
+                    <div class="legal-section-header">PROPERTY DESCRIPTION FOR MUTATION RELEASE</div>
+                    <table class="legal-table">
+                        <tr>
+                            <td style="font-weight:700; width: 200px; background-color: #f9f9f9;">Registered Owner:</td>
+                            <td>${d.surety.fullName} (Surety)</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:700; background-color: #f9f9f9;">Property Address:</td>
+                            <td>${d.surety.propertyAddress || 'Ward No. 8, Subhash Road, Rajamundry'}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:700; background-color: #f9f9f9;">Revenue Survey Number:</td>
+                            <td style="font-family: var(--font-mono); font-weight:700;">${d.surety.surveyNumber || 'RS-104/12-C'}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:700; background-color: #f9f9f9;">Revenue Patta/Khata Record:</td>
+                            <td style="font-family: var(--font-mono);">${d.surety.propertyRevenueRecord || 'Patta No: P-8472-RJM'}</td>
+                        </tr>
+                        <tr>
+                            <td style="font-weight:700; background-color: #f9f9f9;">Bail Bond Released:</td>
+                            <td style="font-family: var(--font-mono); font-weight:700; color:#1a7a4a;">₹${proposedBail.toLocaleString('en-IN')} (SATISFIED)</td>
+                        </tr>
+                    </table>
+                    
+                    <div class="legal-section-header">MUTATION DISCHARGE ORDER</div>
+                    <p class="legal-text-p" style="color: #1a7a4a; font-weight:700; font-size: 14.5px;">
+                        THE REVENUE OFFICE IS DIRECTED TO IMMEDIATELY EXPUNGE THE COURT LIEN AND RELEASE THE ENCUMBRANCE MUTATION RECORDED ON THE WEB-LAND ADANGAL REGISTRY FOR THE ABOVE PROPERTY.
+                    </p>
+                    <p class="legal-text-p">
+                        This order discharges all surety liabilities. The land is restored to an unencumbered status and returned fully to the owner. Let this decree be executed in the official government land records forthwith.
+                    </p>
+
+                    <div style="margin-top: 15px; border: 1px dashed var(--color-success); background: rgba(74, 222, 128, 0.05); padding: 12px; border-radius: 6px;">
+                        <span style="font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: #1a7a4a; display: block;">AUTOMATED RELEASE AUTHENTICATION PROTOCOL</span>
+                        <span style="font-family: var(--font-mono); font-size: 10px; color: #555;">MUTATION DISCHARGE HASH: SHA-256/RELEASE-MUTATION-${Math.floor(100000 + Math.random() * 900000)}-SEC</span>
+                    </div>
                 `;
         }
     }

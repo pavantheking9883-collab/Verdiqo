@@ -334,6 +334,184 @@ export const DashboardJudge = {
                 </div>
             </div>
 
+            <!-- QUANTEX SECURE GATEWAYS: EXTERNAL DATABASE INTEGRATIONS -->
+            <div class="card" style="margin-bottom: 20px; border-left: 4px solid var(--color-gold);">
+                <div class="card-header" style="background-color: var(--color-navy-light); padding: 14px 20px; display:flex; justify-content:space-between; align-items:center;">
+                    <h3 style="display:flex; align-items:center; gap:8px; margin:0; font-family: var(--font-headings); font-size: 16px; color: var(--color-gold-light);">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+                        <span>Quantex Secure Gateways: Real-Time External Database Integrations</span>
+                    </h3>
+                    <span class="badge badge-green" style="font-size: 11px; padding: 4px 10px; font-family:var(--font-mono);">
+                        ● ALL GATEWAYS SECURED (SSL/AES-256)
+                    </span>
+                </div>
+                <div class="card-body" style="padding: 20px; background-color: var(--color-bg-dark);">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
+                        
+                        <!-- 1. Government Identity Databases -->
+                        <div style="background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 700; color: var(--color-text-main); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
+                                    <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-success); border-radius: 50%;"></span>
+                                    Government Identity Databases
+                                </span>
+                                <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success); font-weight: 700;">CONNECTED</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--color-text-muted); line-height: 1.4;">
+                                Checked: <strong>Aadhaar, PAN, Driving License, Passport, Election Commission</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.02); border-radius: 4px; padding: 8px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--color-border);">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Aadhaar Sync:</span>
+                                    <span style="color: var(--color-success);">MATCHED (${c.accused.aadhaarNumber.substring(0, 4)}-XXXX-XXXX)</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>PAN Register:</span>
+                                    <span style="color: var(--color-success);">ACTIVE (${c.accused.panNumber})</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Passport List:</span>
+                                    <span>${c.accused.passportNumber ? c.accused.passportNumber : 'N/A'}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 6px;">
+                                <span>SECURE HASH: SHA-256/UIDAI-API-3829</span>
+                                <span>LATENCY: 85ms</span>
+                            </div>
+                        </div>
+
+                        <!-- 2. Financial Information Systems -->
+                        <div style="background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 700; color: var(--color-text-main); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
+                                    <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-success); border-radius: 50%;"></span>
+                                    Financial Information Systems
+                                </span>
+                                <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success); font-weight: 700;">CONNECTED</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--color-text-muted); line-height: 1.4;">
+                                Checked: <strong>Income Tax, Banking Reg. Authority, CIBIL, RBI NPA records</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.02); border-radius: 4px; padding: 8px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--color-border);">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>CIBIL Credit Score:</span>
+                                    <span style="color: ${c.accused.cibilScore >= 700 ? 'var(--color-success)' : c.accused.cibilScore >= 600 ? 'var(--color-warning)' : 'var(--color-danger)'}; font-weight: 700;">${c.accused.cibilScore}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>ITR File Sync:</span>
+                                    <span style="color: var(--color-success);">AVERAGE ₹${c.checks.finance.metrics.avgItr.toLocaleString('en-IN')}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>RBI Default Check:</span>
+                                    <span style="color: var(--color-success);">CLEAN (No NPA Flags)</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 6px;">
+                                <span>SECURE HASH: SHA-256/CBDT-RBI-9043</span>
+                                <span>LATENCY: 142ms</span>
+                            </div>
+                        </div>
+
+                        <!-- 3. Judicial Information Systems -->
+                        <div style="background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 700; color: var(--color-text-main); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
+                                    <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-success); border-radius: 50%;"></span>
+                                    Judicial Information Systems
+                                </span>
+                                <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success); font-weight: 700;">CONNECTED</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--color-text-muted); line-height: 1.4;">
+                                Checked: <strong>State eCourts databases, Bar Council records, Police FIR records</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.02); border-radius: 4px; padding: 8px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--color-border);">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>NCRB Crimes Match:</span>
+                                    <span style="color: ${c.accused.ncrbCount > 0 ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight: 700;">${c.accused.ncrbCount} Case(s) Registered</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>FIR Database:</span>
+                                    <span>${c.firNumber} MATCH</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Bail History:</span>
+                                    <span>${c.accused.prevBailsGranted} Granted, ${c.accused.abscondingCount} Abscond Defaults</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 6px;">
+                                <span>SECURE HASH: SHA-256/ECOURTS-POL-8492</span>
+                                <span>LATENCY: 115ms</span>
+                            </div>
+                        </div>
+
+                        <!-- 4. Revenue Department Systems -->
+                        <div style="background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 700; color: var(--color-text-main); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
+                                    <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-success); border-radius: 50%;"></span>
+                                    Revenue Department Systems
+                                </span>
+                                <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success); font-weight: 700;">CONNECTED</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--color-text-muted); line-height: 1.4;">
+                                Checked: <strong>Land records (Webland API), property mutation databases</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.02); border-radius: 4px; padding: 8px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--color-border);">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Pledged Land:</span>
+                                    <span style="font-weight:700;">${c.surety.suretyType === 'PROPERTY' ? 'YES (PLEDGED)' : 'NO (INDIVIDUAL BOND)'}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Revenue Record:</span>
+                                    <span>${c.surety.suretyType === 'PROPERTY' ? c.surety.propertyRevenueRecord : 'N/A'}</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Title Ownership ID:</span>
+                                    <span>${c.surety.suretyType === 'PROPERTY' ? c.surety.propertyOwnershipDoc.replace('Title Deed ID: ', '') : 'N/A'}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 6px;">
+                                <span>SECURE HASH: SHA-256/REV-MANDAL-3849</span>
+                                <span>LATENCY: 160ms</span>
+                            </div>
+                        </div>
+
+                        <!-- 5. Biometric Databases -->
+                        <div style="background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px; grid-column: span 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 700; color: var(--color-text-main); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
+                                    <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-success); border-radius: 50%;"></span>
+                                    Biometric Databases
+                                </span>
+                                <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success); font-weight: 700;">CONNECTED</span>
+                            </div>
+                            <div style="font-size: 12px; color: var(--color-text-muted); line-height: 1.4;">
+                                Checked: <strong>Fingerprint scanner, retina/iris scan repositories</strong>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.02); border-radius: 4px; padding: 8px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--color-border);">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Accused Fingerprint:</span>
+                                    <span style="color: var(--color-success); font-weight: 700;">✓ Aadhaar Match (100%)</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Accused Retina Scan:</span>
+                                    <span style="color: var(--color-success); font-weight: 700;">✓ Aadhaar Match (100%)</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Surety Biometrics:</span>
+                                    <span style="color: var(--color-success); font-weight: 700;">✓ Verified at Counter</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 6px;">
+                                <span>SECURE HASH: SHA-256/BIO-MATCH-1204</span>
+                                <span>LATENCY: 90ms</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
             <!-- COMPARABLE PAST CASES REFERENCE -->
             <div class="card" style="margin-bottom: 20px;">
                 <div class="card-header" style="background-color: var(--color-navy-light); cursor:pointer; display:flex; justify-content:space-between; align-items:center;" id="toggle-past-cases">

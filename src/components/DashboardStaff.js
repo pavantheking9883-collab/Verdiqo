@@ -24,6 +24,7 @@ export const DashboardStaff = {
     renderRegisterForm(tabContent, state, onUpdate) {
         const caseNoDemo = `BMS/2026/00${Math.floor(43 + Math.random() * 50)}`;
         const firNoDemo = `FIR/${Math.floor(100 + Math.random() * 900)}/2026-RJM`;
+        const todayDate = new Date().toISOString().split('T')[0];
         
         tabContent.innerHTML = `
             <div class="dashboard-header-block" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -32,21 +33,73 @@ export const DashboardStaff = {
                         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
                         <span>${state.translate('New Bail Application Registration', 'नई ज़मानत याचिका पंजीकरण')}</span>
                     </h2>
-                    <p>Enter accused credentials and execute UIDAI biometric scanning</p>
+                    <p>Enter comprehensive case, accused, and surety records securely in the e-Courts ledger</p>
                 </div>
                 <button class="btn btn-secondary" id="btn-back-to-status">Back to Applications Board</button>
             </div>
 
             <form id="new-bail-form">
-                <!-- ACCUSED SECTION -->
-                <div class="card">
+                <!-- SECTION 1: BAIL APPLICATION & CASE DETAILS -->
+                <div class="card" style="border-top: 3px solid var(--color-gold);">
                     <div class="card-header">
                         <h3 style="display:flex; align-items:center; gap:6px;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                            <span>1. Bail Application & Case Details</span>
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label>Case Number</label>
+                                <input type="text" class="form-input code-font" id="case-no" required value="${caseNoDemo}">
+                            </div>
+                            <div class="form-group">
+                                <label>FIR Number</label>
+                                <input type="text" class="form-input code-font" id="fir-no" required value="${firNoDemo}">
+                            </div>
+                            <div class="form-group">
+                                <label>Charged IPC/BNS Sections</label>
+                                <input type="text" class="form-input" id="case-sections" required value="IPC 420, 468">
+                            </div>
+                            <div class="form-group">
+                                <label>Arrest Date</label>
+                                <input type="date" class="form-input" id="case-arrest-date" required value="2026-05-24">
+                            </div>
+                            <div class="form-group">
+                                <label>Investigating Agency / PS Officer</label>
+                                <input type="text" class="form-input" id="case-officer" required value="Rajamundry Urban PS, Inspector S. Kumar">
+                            </div>
+                            <div class="form-group">
+                                <label>Application Filing Date</label>
+                                <input type="date" class="form-input" id="case-filing-date" required value="${todayDate}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Supporting Documents Submitted</label>
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 8px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; text-transform: none; font-weight: normal; cursor: pointer;">
+                                    <input type="checkbox" id="doc-character" checked style="width: 16px; height: 16px; margin: 0;"> Character Certificates (चरित्र प्रमाण पत्र)
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; text-transform: none; font-weight: normal; cursor: pointer;">
+                                    <input type="checkbox" id="doc-employment" checked style="width: 16px; height: 16px; margin: 0;"> Employment Letters (रोजगार पत्र)
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; text-transform: none; font-weight: normal; cursor: pointer;">
+                                    <input type="checkbox" id="doc-community" checked style="width: 16px; height: 16px; margin: 0;"> Community Ties Evidence (सामुदायिक संबंध साक्ष्य)
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: ACCUSED PERSONAL INFORMATION -->
+                <div class="card" style="border-top: 3px solid var(--color-gold);">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="display:flex; align-items:center; gap:6px;">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                            <span>Accused Person Details</span>
+                            <span>2. Accused Person Details</span>
                         </h3>
                         <button type="button" class="btn btn-primary" id="fill-demo-accused" style="font-size: 11px; padding: 4px 8px;">
-                            Autofill Demo Case (High Risk)
+                            Autofill Demo Accused Details
                         </button>
                     </div>
                     <div class="card-body">
@@ -65,23 +118,51 @@ export const DashboardStaff = {
                             </div>
                             <div class="form-group">
                                 <label>Aadhaar Number</label>
-                                <input type="text" class="form-input code-font" id="accused-aadhaar" maxlength="12" required value="987654321098">
+                                <input type="text" class="form-input code-font" id="accused-aadhaar" maxlength="12" required value="123456789012">
                             </div>
                             <div class="form-group">
                                 <label>PAN Number</label>
-                                <input type="text" class="form-input code-font" id="accused-pan" maxlength="10" required value="ASDFG1234H">
+                                <input type="text" class="form-input code-font" id="accused-pan" maxlength="10" required value="VEMUR1984S">
                             </div>
                             <div class="form-group">
                                 <label>Mobile Number</label>
                                 <input type="text" class="form-input code-font" id="accused-mobile" maxlength="10" required value="9876543210">
+                            </div>
+                            <div class="form-group">
+                                <label>Driving License (DL) Number</label>
+                                <input type="text" class="form-input code-font" id="accused-dl" required value="AP05-2026-0042841">
+                            </div>
+                            <div class="form-group">
+                                <label>Passport Number</label>
+                                <input type="text" class="form-input code-font" id="accused-passport" required value="U8374928">
+                            </div>
+                            <div class="form-group">
+                                <label>Employment details</label>
+                                <input type="text" class="form-input" id="accused-employment" required value="Account Manager, TechSolutions Ltd">
+                            </div>
+                            <div class="form-group">
+                                <label>Monthly Income (₹)</label>
+                                <input type="number" class="form-input code-font" id="accused-income" required value="45000">
+                            </div>
+                            <div class="form-group">
+                                <label>Bank Account Information</label>
+                                <input type="text" class="form-input code-font" id="accused-bank-account" required value="SBI A/c 38472948274">
+                            </div>
+                            <div class="form-group">
+                                <label>Credit History (CIBIL Score)</label>
+                                <input type="number" class="form-input code-font" id="accused-cibil" min="300" max="900" required value="740">
                             </div>
                         </div>
                         <div class="form-group">
                             <label>Residential Address</label>
                             <input type="text" class="form-input" id="accused-address" required value="Flat 402, Sai Balaji Residency, Rajamundry, AP">
                         </div>
+                        <div class="form-group">
+                            <label>Previous Criminal History (NCRB registers)</label>
+                            <textarea class="form-input" id="accused-criminal-history" rows="2" placeholder="Detail any prior FIR filings or court convictions...">No active convictions. Zero flight defaults. Cooperative with investigations.</textarea>
+                        </div>
                         
-                        <div class="form-section-title">Accused Biometric Capture</div>
+                        <div class="form-section-title">Accused Biometric Counter-Capture</div>
                         <div class="biometric-capture-zone">
                             <div class="biometric-box" id="accused-finger-box">
                                 <div class="scan-pulse-line"></div>
@@ -105,69 +186,100 @@ export const DashboardStaff = {
                     </div>
                 </div>
 
-                <!-- SURETY SECTION -->
-                <div class="card">
-                    <div class="card-header">
+                <!-- SECTION 3: SURETY INFORMATION -->
+                <div class="card" style="border-top: 3px solid var(--color-gold);">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                         <h3 style="display:flex; align-items:center; gap:6px;">
                             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                            <span>Surety / Guarantor Details</span>
+                            <span>3. Surety / Solvent Guarantor Details</span>
                         </h3>
                         <button type="button" class="btn btn-primary" id="fill-demo-surety" style="font-size: 11px; padding: 4px 8px;">
-                            Autofill Demo Surety (Capable)
+                            Autofill Demo Surety Details
                         </button>
                     </div>
                     <div class="card-body">
-                        <div class="form-grid-3">
-                            <div class="form-group">
-                                <label>Surety Full Name</label>
-                                <input type="text" class="form-input" id="surety-name" required value="Madhava Rao Vemuri">
-                            </div>
-                            <div class="form-group">
-                                <label>Relation to Accused</label>
-                                <select class="form-input" id="surety-relation" required>
-                                    <option value="Brother">Brother</option>
-                                    <option value="Father">Father</option>
-                                    <option value="Friend">Friend</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Surety Mobile</label>
-                                <input type="text" class="form-input code-font" id="surety-mobile" maxlength="10" required value="8765432109">
-                            </div>
-                            <div class="form-group">
-                                <label>Surety Aadhaar</label>
-                                <input type="text" class="form-input code-font" id="surety-aadhaar" maxlength="12" required value="876543210987">
-                            </div>
-                            <div class="form-group">
-                                <label>Surety PAN</label>
-                                <input type="text" class="form-input code-font" id="surety-pan" maxlength="10" required value="LKJHG6789F">
-                            </div>
-                            <div class="form-group">
-                                <label>Employment / declared income</label>
-                                <input type="text" class="form-input" id="surety-employment" required value="Retired Government Clerk, Pension ₹35,000">
+                        <!-- Switcher for Surety Type -->
+                        <div class="form-group" style="margin-bottom: 24px; max-width: 400px;">
+                            <label>Solvency Surety Type</label>
+                            <select class="form-input" id="surety-type-select" style="font-weight: 700; border-color: var(--color-gold);">
+                                <option value="PROPERTY">Property Surety (Revenue/Land Asset Backed)</option>
+                                <option value="INDIVIDUAL">Individual Surety (Solvent Guarantor Backed)</option>
+                            </select>
+                        </div>
+
+                        <!-- SUB-SECTION A: INDIVIDUAL SURETY -->
+                        <div id="surety-individual-section" style="display: none;">
+                            <div class="form-grid-3">
+                                <div class="form-group">
+                                    <label>Surety Full Name</label>
+                                    <input type="text" class="form-input" id="surety-name-i" value="Madhava Rao Vemuri">
+                                </div>
+                                <div class="form-group">
+                                    <label>Relation to Accused</label>
+                                    <select class="form-input" id="surety-relation-i">
+                                        <option value="Brother">Brother</option>
+                                        <option value="Father">Father</option>
+                                        <option value="Friend">Friend</option>
+                                        <option value="Other">Other Relative</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Surety Mobile Number</label>
+                                    <input type="text" class="form-input code-font" id="surety-mobile-i" maxlength="10" value="8765432109">
+                                </div>
+                                <div class="form-group">
+                                    <label>Surety Aadhaar Number</label>
+                                    <input type="text" class="form-input code-font" id="surety-aadhaar-i" maxlength="12" value="876543210987">
+                                </div>
+                                <div class="form-group">
+                                    <label>Surety PAN Number</label>
+                                    <input type="text" class="form-input code-font" id="surety-pan-i" maxlength="10" value="LKJHG6789F">
+                                </div>
+                                <div class="form-group">
+                                    <label>Employment / Financial Details</label>
+                                    <input type="text" class="form-input" id="surety-employment-i" value="Retired Government Clerk, Pension ₹35,000">
+                                </div>
+                                <div class="form-group">
+                                    <label>Declared Monthly Income (₹)</label>
+                                    <input type="number" class="form-input code-font" id="surety-income-i" value="35000">
+                                </div>
                             </div>
                         </div>
 
-                        <div class="form-section-title">Surety Property Asset Pledged</div>
-                        <div class="form-grid-3">
-                            <div class="form-group">
-                                <label>Property Address & Survey No</label>
-                                <input type="text" class="form-input" id="property-address" value="Ward No 8, Subhash Road, Rajamundry. RS-104/12-C">
-                            </div>
-                            <div class="form-group">
-                                <label>Market Value (₹)</label>
-                                <input type="number" class="form-input code-font" id="property-valuation" value="650000">
-                            </div>
-                            <div class="form-group">
-                                <label>Revenue Record Mutation State</label>
-                                <select class="form-input" id="property-encumbered">
-                                    <option value="clean">Clean / Unencumbered</option>
-                                    <option value="mortgaged">Encumbered / Mortgaged</option>
-                                </select>
+                        <!-- SUB-SECTION B: PROPERTY SURETY -->
+                        <div id="surety-property-section">
+                            <div class="form-grid-3">
+                                <div class="form-group">
+                                    <label>Pledged Property Address</label>
+                                    <input type="text" class="form-input" id="property-address" value="Ward No 8, Subhash Road, Rajamundry">
+                                </div>
+                                <div class="form-group">
+                                    <label>Revenue Survey Number</label>
+                                    <input type="text" class="form-input code-font" id="property-survey" value="RS-104/12-C">
+                                </div>
+                                <div class="form-group">
+                                    <label>Revenue Record Patta/Khata No.</label>
+                                    <input type="text" class="form-input code-font" id="property-patta" value="P-8472-RJM">
+                                </div>
+                                <div class="form-group">
+                                    <label>Market Asset Valuation (₹)</label>
+                                    <input type="number" class="form-input code-font" id="property-valuation" value="650000">
+                                </div>
+                                <div class="form-group">
+                                    <label>Ownership Verification Title Deed ID</label>
+                                    <input type="text" class="form-input code-font" id="property-ownership-id" value="TD-2026-RJM-482">
+                                </div>
+                                <div class="form-group">
+                                    <label>Revenue mutation Encumbrance Status</label>
+                                    <select class="form-input" id="property-encumbered">
+                                        <option value="clean">Clean / Unencumbered</option>
+                                        <option value="mortgaged">Encumbered / Mortgaged</option>
+                                    </select>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="form-section-title">Surety Biometric Capture</div>
+                        <div class="form-section-title">Surety Biometric Counter-Capture</div>
                         <div class="biometric-capture-zone">
                             <div class="biometric-box" id="surety-finger-box">
                                 <div class="scan-pulse-line"></div>
@@ -191,42 +303,28 @@ export const DashboardStaff = {
                     </div>
                 </div>
 
-                <!-- CASE DETAILS -->
-                <div class="card">
+                <!-- SECTION 4: LEGAL ARGUMENTS & COURT DETAILS -->
+                <div class="card" style="border-top: 3px solid var(--color-gold);">
                     <div class="card-header">
                         <h3 style="display:flex; align-items:center; gap:6px;">
-                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
-                            <span>Case & Legal Reference</span>
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><path d="M12 2v20M5 7h14M5 7L3 13h4L5 7zm14 0l-2 6h4l-2-6zM12 22h6M12 22H6"/></svg>
+                            <span>4. Legal Arguments & Court Information</span>
                         </h3>
                     </div>
                     <div class="card-body">
                         <div class="form-grid-3">
                             <div class="form-group">
-                                <label>Case Number</label>
-                                <input type="text" class="form-input code-font" id="case-no" required value="${caseNoDemo}">
-                            </div>
-                            <div class="form-group">
-                                <label>FIR Number</label>
-                                <input type="text" class="form-input code-font" id="fir-no" required value="${firNoDemo}">
-                            </div>
-                            <div class="form-group">
-                                <label>Charged IPC Sections</label>
-                                <input type="text" class="form-input" id="case-sections" required value="IPC 420, 468">
-                            </div>
-                            <div class="form-group">
-                                <label>Arrest Date</label>
-                                <input type="date" class="form-input" id="case-arrest-date" required value="2026-05-24">
-                            </div>
-                            <div class="form-group">
-                                <label>Investigating PS/Officer</label>
-                                <input type="text" class="form-input" id="case-officer" required value="Rajamundry Urban PS, Inspector S. Kumar">
-                            </div>
-                            <div class="form-group">
-                                <label>Preceding Judge</label>
+                                <label>Presiding Judge Name</label>
                                 <input type="text" class="form-input" id="case-judge" required value="Hon'ble J. Kameswara Rao">
                             </div>
-                        </div>
-                        <div class="form-grid-3">
+                            <div class="form-group">
+                                <label>Presiding Judge ID</label>
+                                <input type="text" class="form-input code-font" id="case-judge-id" required value="JUDGE-KAMESWARA-2026">
+                            </div>
+                            <div class="form-group">
+                                <label>Court Name & Location</label>
+                                <input type="text" class="form-input" id="case-court-location" required value="Sessions Court Room 2, Rajamundry">
+                            </div>
                             <div class="form-group">
                                 <label>Bail Application Type</label>
                                 <select class="form-input" id="case-bail-type">
@@ -243,15 +341,44 @@ export const DashboardStaff = {
                                 <label>Hearing Date & Time</label>
                                 <input type="datetime-local" class="form-input" id="case-hearing" required value="2026-05-29T10:30">
                             </div>
+                            <div class="form-group">
+                                <label>Bail Case Status</label>
+                                <select class="form-input" id="case-status-select">
+                                    <option value="Ready for Judge">Ready for Judge</option>
+                                    <option value="Checking">Under Registry Scrutiny</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Proposed Judicial Release Conditions</label>
+                            <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 8px;">
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; text-transform: none; font-weight: normal; cursor: pointer;">
+                                    <input type="checkbox" id="cond-weekly" checked style="width: 16px; height: 16px; margin: 0;"> Weekly Reporting to Precinct
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; text-transform: none; font-weight: normal; cursor: pointer;">
+                                    <input type="checkbox" id="cond-passport" checked style="width: 16px; height: 16px; margin: 0;"> Passport Surrender/Travel Lock
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; text-transform: none; font-weight: normal; cursor: pointer;">
+                                    <input type="checkbox" id="cond-witness" checked style="width: 16px; height: 16px; margin: 0;"> No Contact with Prosecution Witnesses
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; text-transform: none; font-weight: normal; cursor: pointer;">
+                                    <input type="checkbox" id="cond-geofence" checked style="width: 16px; height: 16px; margin: 0;"> Geofencing Movement Restricts
+                                </label>
+                            </div>
                         </div>
                         
                         <div class="form-group">
-                            <label>Prosecution Objections</label>
+                            <label>Public Prosecutor's Arguments (Against Bail)</label>
                             <textarea class="form-input" id="prosecution-arg" rows="2">Objections: Possibility of tampering with witnesses.</textarea>
                         </div>
                         <div class="form-group">
-                            <label>Defence Lawyer Arguments</label>
+                            <label>Defence Counsel's Arguments (Supporting Bail)</label>
                             <textarea class="form-input" id="defence-arg" rows="2">Accused is cooperative. Items recovered. No flight risk.</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Previous Court Orders Relevant to Bail</label>
+                            <textarea class="form-input" id="previous-court-orders" rows="2">First bail application rejected on 2026-05-18 by Magistrate Court due to jurisdictional limitations.</textarea>
                         </div>
                         
                         <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
@@ -262,6 +389,21 @@ export const DashboardStaff = {
                 </div>
             </form>
         `;
+
+        // Interactive Surety Type Toggle
+        const typeSelect = tabContent.querySelector('#surety-type-select');
+        const sectionProp = tabContent.querySelector('#surety-property-section');
+        const sectionInd = tabContent.querySelector('#surety-individual-section');
+        
+        typeSelect.addEventListener('change', (e) => {
+            if (e.target.value === 'PROPERTY') {
+                sectionProp.style.display = 'block';
+                sectionInd.style.display = 'none';
+            } else {
+                sectionProp.style.display = 'none';
+                sectionInd.style.display = 'block';
+            }
+        });
 
         // Biometric scanning state variables
         let accFinger = false, accIris = false, surFinger = false, surIris = false;
@@ -296,7 +438,7 @@ export const DashboardStaff = {
             executeScanner('surety-iris-box', 'surety-iris-txt', 'surety-iris-indicator', (v) => { surIris = v; });
         });
 
-        // Autofill Demo Shortcut
+        // Autofill Demo Shortcut (Accused)
         tabContent.querySelector('#fill-demo-accused').addEventListener('click', () => {
             tabContent.querySelector('#accused-name').value = "Vijay Kumar Ganti";
             tabContent.querySelector('#accused-father').value = "Laxman Kumar Ganti";
@@ -305,6 +447,13 @@ export const DashboardStaff = {
             tabContent.querySelector('#accused-pan').value = "MNBVC9876P";
             tabContent.querySelector('#accused-mobile').value = "9440123456";
             tabContent.querySelector('#accused-address').value = "D.No 4-12, Danavaipeta, Rajamundry, Andhra Pradesh";
+            tabContent.querySelector('#accused-dl').value = "AP05-2023-9847291";
+            tabContent.querySelector('#accused-passport').value = "V2948194";
+            tabContent.querySelector('#accused-employment').value = "Private Sector Account Executive";
+            tabContent.querySelector('#accused-income').value = "35000";
+            tabContent.querySelector('#accused-bank-account').value = "HDFC Bank A/c 93847294827";
+            tabContent.querySelector('#accused-cibil').value = "520";
+            tabContent.querySelector('#accused-criminal-history').value = "3 prior arrests pending trial under NDPS registers. 1 absconding flag in 2024.";
             
             tabContent.querySelector('#accused-finger-box').className = "biometric-box scanned-green";
             tabContent.querySelector('#accused-finger-indicator').innerText = "✓ CONFIRMED (Aadhaar Match)";
@@ -315,15 +464,25 @@ export const DashboardStaff = {
             accFinger = true; accIris = true;
         });
 
+        // Autofill Demo Shortcut (Surety)
         tabContent.querySelector('#fill-demo-surety').addEventListener('click', () => {
-            tabContent.querySelector('#surety-name').value = "Ramakrishna Prasad Rao";
-            tabContent.querySelector('#surety-mobile').value = "7702456789";
-            tabContent.querySelector('#surety-aadhaar').value = "901234567890";
-            tabContent.querySelector('#surety-pan').value = "QWERTY6543K";
-            tabContent.querySelector('#surety-employment').value = "Contractor";
-            tabContent.querySelector('#property-address').value = "Survey RS-241/8-A, Danavaipeta, Rajamundry";
-            tabContent.querySelector('#property-valuation').value = "80000";
-            tabContent.querySelector('#property-encumbered').value = "mortgaged";
+            const isProperty = typeSelect.value === 'PROPERTY';
+            
+            if (isProperty) {
+                tabContent.querySelector('#property-address').value = "Survey RS-241/8-A, Danavaipeta, Rajamundry";
+                tabContent.querySelector('#property-survey').value = "RS-241/8-A";
+                tabContent.querySelector('#property-patta').value = "P-8472-RJM";
+                tabContent.querySelector('#property-valuation').value = "80000";
+                tabContent.querySelector('#property-ownership-id').value = "TD-2018-RJM-104";
+                tabContent.querySelector('#property-encumbered').value = "mortgaged";
+            } else {
+                tabContent.querySelector('#surety-name-i').value = "Ramakrishna Prasad Rao";
+                tabContent.querySelector('#surety-mobile-i').value = "7702456789";
+                tabContent.querySelector('#surety-aadhaar-i').value = "901234567890";
+                tabContent.querySelector('#surety-pan-i').value = "QWERTY6543K";
+                tabContent.querySelector('#surety-employment-i').value = "Contractor";
+                tabContent.querySelector('#surety-income-i').value = "30000";
+            }
             
             tabContent.querySelector('#surety-finger-box').className = "biometric-box scanned-green";
             tabContent.querySelector('#surety-finger-indicator').innerText = "✓ CONFIRMED (Aadhaar Match)";
@@ -353,82 +512,158 @@ export const DashboardStaff = {
                 return;
             }
 
-            const accusedName = tabContent.querySelector('#accused-name').value;
-            const accusedAadhaar = tabContent.querySelector('#accused-aadhaar').value;
-            const accusedPan = tabContent.querySelector('#accused-pan').value;
-            const suretyName = tabContent.querySelector('#surety-name').value;
-            const suretyAadhaar = tabContent.querySelector('#surety-aadhaar').value;
-            const suretyPan = tabContent.querySelector('#surety-pan').value;
-            const suretyValuation = parseFloat(tabContent.querySelector('#property-valuation').value || 0);
-            const isEncumbered = tabContent.querySelector('#property-encumbered').value === 'mortgaged';
             const caseNumber = tabContent.querySelector('#case-no').value;
             const firNumber = tabContent.querySelector('#fir-no').value;
             const sections = tabContent.querySelector('#case-sections').value;
-            const bailAmt = parseFloat(tabContent.querySelector('#proposed-bail-amount').value || 50000);
+            const arrestDate = tabContent.querySelector('#case-arrest-date').value;
+            const officer = tabContent.querySelector('#case-officer').value;
+            const filingDate = tabContent.querySelector('#case-filing-date').value;
+            
+            // Checkboxes
+            const supportingDocs = [];
+            if (tabContent.querySelector('#doc-character').checked) supportingDocs.push('Character Certificate');
+            if (tabContent.querySelector('#doc-employment').checked) supportingDocs.push('Employment Letter');
+            if (tabContent.querySelector('#doc-community').checked) supportingDocs.push('Community Ties Evidence');
 
-            // Mock profile configurations based on names
+            const accusedName = tabContent.querySelector('#accused-name').value;
+            const accusedFather = tabContent.querySelector('#accused-father').value;
+            const accusedDob = tabContent.querySelector('#accused-dob').value;
+            const accusedAadhaar = tabContent.querySelector('#accused-aadhaar').value;
+            const accusedPan = tabContent.querySelector('#accused-pan').value;
+            const accusedMobile = tabContent.querySelector('#accused-mobile').value;
+            const accusedDl = tabContent.querySelector('#accused-dl').value;
+            const accusedPassport = tabContent.querySelector('#accused-passport').value;
+            const accusedAddress = tabContent.querySelector('#accused-address').value;
+            const accusedEmployment = tabContent.querySelector('#accused-employment').value;
+            const accusedIncome = parseFloat(tabContent.querySelector('#accused-income').value || 0);
+            const bankAccount = tabContent.querySelector('#accused-bank-account').value;
+            const cibilScore = parseInt(tabContent.querySelector('#accused-cibil').value || 700);
+            const criminalHistory = tabContent.querySelector('#accused-criminal-history').value;
+
+            // Surety Switcher values
+            const suretyType = typeSelect.value;
+            let suretyName = '', suretyRelation = '', suretyMobile = '', suretyAadhaar = '', suretyPan = '', suretyEmployment = '', suretyIncome = 0;
+            let propertyAddress = '', propertySurvey = '', propertyPatta = '', propertyValuation = 0, propertyOwnershipDoc = '', encumbState = 'CLEAN';
+
+            if (suretyType === 'INDIVIDUAL') {
+                suretyName = tabContent.querySelector('#surety-name-i').value;
+                suretyRelation = tabContent.querySelector('#surety-relation-i').value;
+                suretyMobile = tabContent.querySelector('#surety-mobile-i').value;
+                suretyAadhaar = tabContent.querySelector('#surety-aadhaar-i').value;
+                suretyPan = tabContent.querySelector('#surety-pan-i').value;
+                suretyEmployment = tabContent.querySelector('#surety-employment-i').value;
+                suretyIncome = parseFloat(tabContent.querySelector('#surety-income-i').value || 0);
+            } else {
+                propertyAddress = tabContent.querySelector('#property-address').value;
+                propertySurvey = tabContent.querySelector('#property-survey').value;
+                propertyPatta = tabContent.querySelector('#property-patta').value;
+                propertyValuation = parseFloat(tabContent.querySelector('#property-valuation').value || 0);
+                propertyOwnershipDoc = tabContent.querySelector('#property-ownership-id').value;
+                encumbState = tabContent.querySelector('#property-encumbered').value === 'mortgaged' ? 'ENCUMBERED' : 'CLEAN';
+                
+                // Set default individual name mapping for property owners
+                suretyName = accusedFather; // Typically father pledges property in sandbox
+                suretyRelation = 'Father';
+            }
+
+            // Legal Arguments & Court
+            const presidingJudge = tabContent.querySelector('#case-judge').value;
+            const judgeId = tabContent.querySelector('#case-judge-id').value;
+            const courtLocation = tabContent.querySelector('#case-court-location').value;
+            const bailType = tabContent.querySelector('#case-bail-type').value;
+            const bailAmt = parseFloat(tabContent.querySelector('#proposed-bail-amount').value || 50000);
+            const hearingDate = tabContent.querySelector('#case-hearing').value;
+            const caseStatus = tabContent.querySelector('#case-status-select').value;
+            
+            const proposedConditions = [];
+            if (tabContent.querySelector('#cond-weekly').checked) proposedConditions.push('Weekly Reporting');
+            if (tabContent.querySelector('#cond-passport').checked) proposedConditions.push('Passport Deposit');
+            if (tabContent.querySelector('#cond-witness').checked) proposedConditions.push('No Contact with Witnesses');
+            if (tabContent.querySelector('#cond-geofence').checked) proposedConditions.push('Geofence Restrictions');
+
+            const prosecutionArg = tabContent.querySelector('#prosecution-arg').value;
+            const defenceArg = tabContent.querySelector('#defence-arg').value;
+            const previousCourtOrders = tabContent.querySelector('#previous-court-orders').value;
+
+            // Mock profile configurations based on names for verification engine
             let ncrbCount = 0, prevBails = 0, prevHonored = 0, absconding = 0, travelWatch = false;
-            let suretyBails = 0, cibilScore = 720;
+            let suretyBails = 0;
 
             if (accusedName.toLowerCase().includes('vijay') || accusedName.toLowerCase().includes('ganti')) {
-                ncrbCount = 3; prevBails = 2; prevHonored = 1; absconding = 1; travelWatch = true; cibilScore = 520; suretyBails = 3;
+                ncrbCount = 3; prevBails = 2; prevHonored = 1; absconding = 1; travelWatch = true; suretyBails = 3;
             }
 
             // Execute Verification Engine
             const idCheck = VerificationEngine.verifyIdentity(accusedAadhaar, accFinger, accIris);
-            const finCheck = VerificationEngine.verifyFinancialCapacity(suretyPan, [30000, 31000, 32000], 12000, cibilScore, bailAmt);
+            const finCheck = VerificationEngine.verifyFinancialCapacity(suretyPan || 'DUMMYPAN12', [30000, 31000, 32000], 12000, cibilScore, bailAmt);
             const riskCheck = VerificationEngine.calculateRiskScore(ncrbCount, prevBails, prevHonored, absconding, travelWatch);
             const suretyCheck = VerificationEngine.verifySuretyLoad(suretyBails, 0);
-            const propCheck = VerificationEngine.verifyProperty(true, suretyName, suretyName, isEncumbered, suretyValuation, bailAmt);
+            const propCheck = VerificationEngine.verifyProperty(suretyType === 'PROPERTY', suretyName, suretyName, encumbState === 'ENCUMBERED', propertyValuation || 500000, bailAmt);
             const recCheck = VerificationEngine.compileRecommendation(idCheck, finCheck, riskCheck, suretyCheck, propCheck);
 
             const newCase = {
                 caseNumber,
                 firNumber,
                 ipcSections: sections,
-                dateOfArrest: tabContent.querySelector('#case-arrest-date').value,
-                policeStation: tabContent.querySelector('#case-officer').value,
-                presidingJudge: tabContent.querySelector('#case-judge').value,
-                bailType: tabContent.querySelector('#case-bail-type').value,
+                dateOfArrest: arrestDate,
+                policeStation: officer,
+                presidingJudge,
+                judgeId,
+                courtLocation,
+                bailType,
                 proposedBailAmount: bailAmt,
-                hearingDate: tabContent.querySelector('#case-hearing').value,
-                currentStatus: 'Ready for Judge',
+                proposedConditions,
+                hearingDate,
+                currentStatus: caseStatus,
                 orderStatus: 'PENDING',
                 judgeRemarks: '',
                 digitalSignature: '',
+                filingDate,
+                supportingDocs,
+                previousCourtOrders,
                 accused: {
                     fullName: accusedName,
-                    dob: tabContent.querySelector('#accused-dob').value,
-                    fathersName: tabContent.querySelector('#accused-father').value,
-                    address: tabContent.querySelector('#accused-address').value,
-                    mobileNumber: tabContent.querySelector('#accused-mobile').value,
+                    dob: accusedDob,
+                    fathersName: accusedFather,
+                    address: accusedAddress,
+                    mobileNumber: accusedMobile,
                     aadhaarNumber: accusedAadhaar,
                     panNumber: accusedPan,
+                    drivingLicense: accusedDl,
+                    passportNumber: accusedPassport,
+                    employmentDetails: accusedEmployment,
+                    monthlyIncome: accusedIncome,
+                    bankAccount,
+                    cibilScore,
+                    criminalHistory,
                     ncrbCount,
                     prevBailsGranted: prevBails,
                     prevBailsHonored: prevHonored,
                     abscondingCount: absconding,
                     travelRestricted: travelWatch,
-                    bankBalance6m: 35000
+                    bankBalance6m: 22000
                 },
                 surety: {
+                    suretyType,
                     fullName: suretyName,
-                    relationToAccused: tabContent.querySelector('#surety-relation').value,
-                    mobileNumber: tabContent.querySelector('#surety-mobile').value,
-                    aadhaarNumber: suretyAadhaar,
-                    panNumber: suretyPan,
-                    employmentDetails: tabContent.querySelector('#surety-employment').value,
-                    monthlyIncome: 35000,
+                    relationToAccused: suretyRelation,
+                    mobileNumber: suretyMobile || accusedMobile,
+                    aadhaarNumber: suretyAadhaar || accusedAadhaar,
+                    panNumber: suretyPan || accusedPan,
+                    employmentDetails: suretyEmployment || 'Guarantor',
+                    monthlyIncome: suretyIncome || 25000,
                     activeBailCount: suretyBails,
-                    propertyAddress: tabContent.querySelector('#property-address').value,
-                    surveyNumber: 'RS-104/12-C',
-                    propertyValuation: suretyValuation,
-                    encumbranceStatus: isEncumbered ? 'ENCUMBERED' : 'CLEAN',
+                    propertyAddress,
+                    surveyNumber: propertySurvey,
+                    propertyValuation,
+                    propertyOwnershipDoc,
+                    propertyRevenueRecord: propertyPatta,
+                    encumbranceStatus: encumbState,
                     mutationStatus: 'PENDING'
                 },
                 arguments: {
-                    prosecution: tabContent.querySelector('#prosecution-arg').value,
-                    defence: tabContent.querySelector('#defence-arg').value
+                    prosecution: prosecutionArg,
+                    defence: defenceArg
                 },
                 checks: {
                     identity: idCheck,
