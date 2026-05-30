@@ -1,0 +1,8 @@
+# Logs and Databases
+*.log
+verdiqo_db
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
