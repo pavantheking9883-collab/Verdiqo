@@ -772,6 +772,10 @@ export const DashboardStaff = {
             </div>
 
             <!-- CASE LIST TABLE CARD -->
+            <p style="text-align: left; color: var(--color-text-muted); font-size: 12.5px; font-style: italic; margin-top: 20px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle; opacity:0.8; color: var(--color-gold);"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><circle cx="12" cy="8" r="1" fill="currentColor"/></svg>
+                <span>Click any row below to view full case details, adjudicate, or print official legal reports.</span>
+            </p>
             <div class="table-card-mock">
                 <div class="data-table-wrapper">
                     <table class="mock-table">
@@ -791,10 +795,6 @@ export const DashboardStaff = {
                     </table>
                 </div>
             </div>
-
-            <p style="text-align: center; color: var(--color-text-muted); font-size: 13px; font-style: italic; margin-top: 10px; margin-bottom: 30px;">
-                Click any row to view case details in Judge view
-            </p>
         `;
 
         // Bind table row clicks -> Securely triggers report viewer to print documents
