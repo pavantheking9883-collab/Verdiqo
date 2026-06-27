@@ -342,22 +342,6 @@ export const DashboardJudge = {
                             <span>Surety &amp; Financial Analysis</span>
                         </div>
                         <div class="panel-body" style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto;">
-                            <!-- Risk Gauge -->
-                            <div style="background:rgba(255,255,255,0.04); border:1px solid var(--color-border); border-radius:8px; padding:14px; display:flex; align-items:center; gap:16px;">
-                                <div style="position:relative; width:80px; height:80px; flex-shrink:0;">
-                                    <svg viewBox="0 0 80 80" width="80" height="80">
-                                        <circle cx="40" cy="40" r="32" fill="none" stroke="var(--color-border)" stroke-width="8"/>
-                                        <circle cx="40" cy="40" r="32" fill="none" stroke="${riskColor}" stroke-width="8" stroke-dasharray="${Math.PI * 64 * riskScore / 100} ${Math.PI * 64}" stroke-linecap="round" transform="rotate(-90 40 40)"/>
-                                    </svg>
-                                    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; color:${riskColor}; font-family:var(--font-mono);">${riskScore}</div>
-                                </div>
-                                <div>
-                                    <div style="font-size:10px; font-weight:800; letter-spacing:1px; color:var(--color-gold); text-transform:uppercase; margin-bottom:4px;">AI Risk Score</div>
-                                    <div style="font-size:16px; font-weight:800; color:${riskColor};">${c.checks.risk.riskLevel} RISK</div>
-                                    <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Recommendation: <strong style="color:var(--color-text-main);">${c.checks.recommendation.label}</strong></div>
-                                </div>
-                            </div>
-
                             <!-- Financial Summary -->
                             <div class="info-item" style="padding-bottom:8px; border-bottom:1px solid var(--color-border);">
                                 <label style="font-weight:700; color:var(--color-gold-light); display:flex; align-items:center; gap:6px; margin-bottom:6px;">
