@@ -601,17 +601,19 @@ class _DashboardStaffState extends State<DashboardStaff> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFD4AF37).withOpacity(0.2),
-                foregroundColor: const Color(0xFFD4AF37),
-              ).build(context, 
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD4AF37).withOpacity(0.2),
+                  foregroundColor: const Color(0xFFD4AF37),
+                ),
                 onPressed: () => _autofillForm(state, 'capable'),
                 child: Text(text['prepopulate_capable']!),
               ),
-              ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.withOpacity(0.2),
-                foregroundColor: Colors.red,
-              ).build(context, 
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red.withOpacity(0.2),
+                  foregroundColor: Colors.red,
+                ),
                 onPressed: () => _autofillForm(state, 'high_risk'),
                 child: Text(text['prepopulate_risk']!),
               ),

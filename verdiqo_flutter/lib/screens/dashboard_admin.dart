@@ -105,9 +105,11 @@ class DashboardAdmin extends StatelessWidget {
                             final fraction = (item['payout'] as int) / totalBudget;
                             return Expanded(
                               flex: (fraction * 100).round(),
-                              child: Container(
-                                color: item['color'] as Color,
-                                toolTip: item['role'] as String,
+                              child: Tooltip(
+                                message: item['role'] as String,
+                                child: Container(
+                                  color: item['color'] as Color,
+                                ),
                               ),
                             );
                           }).toList(),

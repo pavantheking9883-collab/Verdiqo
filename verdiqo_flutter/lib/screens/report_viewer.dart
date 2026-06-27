@@ -51,10 +51,12 @@ class _ReportViewerState extends State<ReportViewer> {
           // Sidebar Report Selector (Left)
           Container(
             width: 280,
-            color: isDark ? const Color(0xFF1E293B) : Colors.white,
-            border: Border(
-              right: BorderSide(
-                color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF1E293B) : Colors.white,
+              border: Border(
+                right: BorderSide(
+                  color: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                ),
               ),
             ),
             child: Column(
