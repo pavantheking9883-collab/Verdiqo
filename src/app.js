@@ -753,6 +753,7 @@ class ApplicationState {
         
         this.initDatabase();
         this.initCivilDatabase();
+        this.syncWithCloudBackend();
     }
 
     applyTheme() {
@@ -836,11 +837,50 @@ class ApplicationState {
         }
     }
 
-    saveDatabase() {
+    async syncWithCloudBackend() {
+        try {
+            // Fetch criminal cases
+            const resCases = await fetch('/api/cases');
+            if (resCases.ok) {
+                const cloudCases = await resCases.json();
+                if (cloudCases && cloudCases.length > 0) {
+                    this.cases = cloudCases;
+                    localStorage.setItem('verdiqo_db', JSON.stringify(this.cases));
+                }
+            }
+
+            // Fetch civil cases
+            const resCivil = await fetch('/api/civil-cases');
+            if (resCivil.ok) {
+                const cloudCivil = await resCivil.json();
+                if (cloudCivil && cloudCivil.length > 0) {
+                    this.civilCases = cloudCivil;
+                    localStorage.setItem('verdiqo_civil_db', JSON.stringify(this.civilCases));
+                }
+            }
+            console.log('[Verdiqo] Synchronized successfully with Neon Postgres cloud backend!');
+            if (window.updateUI) window.updateUI();
+        } catch (e) {
+            console.warn('[Verdiqo] Standalone offline mode — using localStorage database fallback.', e);
+        }
+    }
+
+    async saveDatabase() {
         localStorage.setItem('verdiqo_db_version', 'v3-criminal-only');
-        // Only save criminal bail cases (BMS/ prefix)
         const criminalOnly = this.cases.filter(c => c.caseNumber && c.caseNumber.startsWith('BMS/'));
         localStorage.setItem('verdiqo_db', JSON.stringify(criminalOnly));
+
+        try {
+            for (const c of criminalOnly) {
+                await fetch('/api/cases', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(c)
+                });
+            }
+        } catch (e) {
+            console.warn('[Verdiqo] Failed to push criminal case updates to backend API:', e);
+        }
     }
 
     initCivilDatabase() {
@@ -851,7 +891,6 @@ class ApplicationState {
         let parsedCache = null;
         if (cached && cachedVersion === CIVIL_DB_VERSION) {
             parsedCache = JSON.parse(cached);
-            // Extra safety: filter out any criminal cases that crept in
             parsedCache = parsedCache.filter(c => c.caseId && c.caseId.startsWith('CL-'));
         }
 
@@ -863,11 +902,22 @@ class ApplicationState {
         }
     }
 
-    saveCivilDatabase() {
+    async saveCivilDatabase() {
         localStorage.setItem('verdiqo_civil_db_version', 'v3-civil-only');
-        // Only save civil cases (CL- prefix)
         const civilOnly = this.civilCases.filter(c => c.caseId && c.caseId.startsWith('CL-'));
         localStorage.setItem('verdiqo_civil_db', JSON.stringify(civilOnly));
+
+        try {
+            for (const c of civilOnly) {
+                await fetch('/api/civil-cases', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(c)
+                });
+            }
+        } catch (e) {
+            console.warn('[Verdiqo] Failed to push civil case updates to backend API:', e);
+        }
     }
 
 
@@ -1062,6 +1112,7 @@ function updateUI() {
     } else if (activeRole === 'CITIZEN') {
         DashboardCitizen.render(mountPoint, AppState, updateUI);
     }
+    window.updateUI = updateUI;
 }
 
 function renderLoginPortal(root) {

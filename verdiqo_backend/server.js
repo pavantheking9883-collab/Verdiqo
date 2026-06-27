@@ -2,7 +2,7 @@
 
 const express = require('express');
 const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
+const { Pool } = require('pg');
 const path = require('path');
 
 const app = express();
@@ -23,20 +23,19 @@ app.use(express.static(frontendRoot, {
         }
     }
 }));
-console.log(`Frontend served at: http://localhost:${process.env.PORT || 3000}`);
+console.log(`Frontend served at: http://localhost:${PORT}`);
 
-
-
-// Initialize SQLite database
-const dbPath = path.resolve(__dirname, 'verdiqo.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error opening database:', err.message);
-  } else {
-    console.log('Connected to the SQLite database at:', dbPath);
-    initializeTables();
+// Initialize PostgreSQL Connection Pool using Neon Connection String
+const connectionString = process.env.DATABASE_URL || 'postgresql://neondb_owner:npg_haUZuPe6x3LI@ep-spring-unit-aomrtac8-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require';
+const pool = new Pool({
+  connectionString,
+  ssl: {
+    rejectUnauthorized: false
   }
 });
+
+// Run table initialization
+initializeTables();
 
 // Verification Engine Logic
 const VerificationEngine = {
@@ -128,23 +127,15 @@ const VerificationEngine = {
     if (travelRestricted) {
       score += 15;
       reasons.push('Immigration flight-risk watch list flag (+15 Risk)');
-      reasonsHi.push('इमिग्रेशन फ्लाइट-रिस्क वॉच लिस्ट फ्लैग सक्रिय (+15 जोखिम)');
+      reasonsHi.push('इमिग्रेशन फ्लाइट-रिस्क वॉच लिस्ट फ्लैग (+15 जोखिम)');
     }
 
-    if (prevBailsGranted > 0) {
-      const defaults = prevBailsGranted - prevBailsHonored;
-      if (defaults > 0) {
-        score += 20;
-        reasons.push(`Defaulted on previous bail conditions in ${defaults} cases (+20 Risk)`);
-        reasonsHi.push(`पिछले ${defaults} मामलों में ज़मानत शर्तों का उल्लंघन किया (+20 जोखिम)`);
-      } else {
-        score -= 10;
-        reasons.push('Excellent compliance history on previous granted bail (-10 Risk reduction)');
-        reasonsHi.push('पूर्व में स्वीकृत ज़मानत पर उत्कृष्ट अनुपालन इतिहास (-10 जोखिम में कमी)');
-      }
+    const bailStability = prevBailsGranted > 0 ? (prevBailsHonored / prevBailsGranted) : 1;
+    if (bailStability < 0.8 && prevBailsGranted > 0) {
+      score += 15;
+      reasons.push(`Low bail stability ratio (${(bailStability*100).toFixed(0)}% honored) (+15 Risk)`);
+      reasonsHi.push(`कम ज़मानत स्थिरता अनुपात (${(bailStability*100).toFixed(0)}% सम्मानित) (+15 जोखिम)`);
     }
-
-    score = Math.max(0, Math.min(score, 100));
 
     let riskLevel = 'LOW';
     if (score > 60) riskLevel = 'HIGH';
@@ -153,48 +144,40 @@ const VerificationEngine = {
     return { score, riskLevel, reasons, reasonsHi };
   },
 
-  verifySuretyLoad(activeBailCount, pastDefaults) {
-    if (pastDefaults > 0) {
+  verifySuretyLoad(activeBailCount, courtThreshold = 2) {
+    if (activeBailCount >= courtThreshold) {
       return {
         status: 'DISQUALIFIED',
-        reasonEn: `Disqualified. Surety defaulted on guarantees in other courts (${pastDefaults} past defaults).`,
-        reasonHi: `अयोग्य। ज़मानतदार अन्य न्यायालयों में गारंटी देने में चूक गया (${pastDefaults} पिछली चूकें)।`
+        reasonEn: `Disqualified. Surety currently holds ${activeBailCount} active bail bonds (Threshold: ${courtThreshold}).`,
+        reasonHi: `अयोग्य। ज़मानतदार के पास वर्तमान में ${activeBailCount} सक्रिय ज़मानत बांड हैं (सीमा: ${courtThreshold})।`
       };
-    }
-    if (activeBailCount >= 3) {
-      return {
-        status: 'DISQUALIFIED',
-        reasonEn: `Disqualified. Active bail guarantees limit exceeded. Currently holding ${activeBailCount} active commitments.`,
-        reasonHi: `अयोग्य। सक्रिय ज़मानत गारंटी सीमा से अधिक। वर्तमान में ${activeBailCount} सक्रिय प्रतिबद्धताएं हैं।`
-      };
-    }
-    if (activeBailCount === 2) {
+    } else if (activeBailCount > 0) {
       return {
         status: 'OVERLOADED',
-        reasonEn: `Warning: High Surety Load. Currently holding ${activeBailCount} active commitments across courts. Bordering limits.`,
-        reasonHi: `चेतावनी: उच्च ज़मानत भार। वर्तमान में न्यायालयों में ${activeBailCount} सक्रिय प्रतिबद्धताएं हैं। सीमा के करीब।`
+        reasonEn: `Slight risk check. Surety has ${activeBailCount} active bail bonds.`,
+        reasonHi: `हल्का जोखिम। ज़मानतदार के पास ${activeBailCount} सक्रिय ज़मानत बांड हैं।`
       };
     }
     return {
-      status: 'CLEAR',
-      reasonEn: `Clearance granted. Surety holds ${activeBailCount} active guarantee(s). Well within legal limits.`,
-      reasonHi: `मंजूरी दी गई। ज़मानतदार के पास ${activeBailCount} सक्रिय गारंटी है। कानूनी सीमाओं के भीतर।`
+      status: 'CLEAN',
+      reasonEn: 'Surety holds zero active external bail bonds.',
+      reasonHi: 'ज़मानतदार के पास कोई अन्य सक्रिय ज़मानत बांड नहीं है।'
     };
   },
 
-  verifyProperty(hasProperty, ownerName, registryOwner, encumbered, valuation, proposedBailAmount) {
-    if (!hasProperty) {
+  verifyProperty(isPropertySurety, ownerName, suretyName, encumbered, valuation, proposedBailAmount) {
+    if (!isPropertySurety) {
       return {
-        status: 'N/A',
-        reasonEn: 'No property surety pledged. Individual personal surety submitted.',
-        reasonHi: 'कोई संपत्ति ज़मानत गिरवी नहीं रखी गई। व्यक्तिगत ज़मानत प्रस्तुत की गई।'
+        status: 'ELIGIBLE',
+        reasonEn: 'Not a property-backed surety application (cash/personal bond selected).',
+        reasonHi: 'संपत्ति-आधारित ज़मानत आवेदन नहीं है।'
       };
     }
-    if (ownerName.toLowerCase().trim() !== registryOwner.toLowerCase().trim()) {
+    if (ownerName.toLowerCase().trim() !== suretyName.toLowerCase().trim()) {
       return {
         status: 'BLOCKED',
-        reasonEn: `Property title mismatch. Declared owner is "${ownerName}", but Revenue Land Registry records show "${registryOwner}".`,
-        reasonHi: `संपत्ति के स्वामित्व का मिलान नहीं हुआ। घोषित स्वामी "${ownerName}" है, लेकिन राजस्व भूमि रजिस्ट्री रिकॉर्ड "${registryOwner}" दिखाता है।`
+        reasonEn: 'Title deed mismatch. Property owner name does not match the pledging surety.',
+        reasonHi: 'स्वामित्व विलेख बेमेल। संपत्ति के मालिक का नाम ज़मानतदार से मेल नहीं खाता है।'
       };
     }
     if (encumbered) {
@@ -322,10 +305,11 @@ function runScoringForCase(c) {
   };
 }
 
-// Scaffold SQLite database tables
-function initializeTables() {
-  db.serialize(() => {
-    db.run(`CREATE TABLE IF NOT EXISTS court_cases (
+// Scaffold Neon PostgreSQL Database tables
+async function initializeTables() {
+  try {
+    // 1. Create table court_cases
+    await pool.query(`CREATE TABLE IF NOT EXISTS court_cases (
       case_number TEXT PRIMARY KEY,
       fir_number TEXT,
       ipc_sections TEXT,
@@ -336,10 +320,10 @@ function initializeTables() {
       court_location TEXT,
       previous_court_orders TEXT,
       filing_date TEXT,
-      supporting_docs TEXT, -- JSON string array
+      supporting_docs TEXT,
       bail_type TEXT,
-      proposed_bail_amount REAL,
-      proposed_conditions TEXT, -- JSON string array
+      proposed_bail_amount DOUBLE PRECISION,
+      proposed_conditions TEXT,
       hearing_date TEXT,
       current_status TEXT,
       order_status TEXT,
@@ -347,7 +331,8 @@ function initializeTables() {
       digital_signature TEXT
     )`);
 
-    db.run(`CREATE TABLE IF NOT EXISTS accused (
+    // 2. Create table accused
+    await pool.query(`CREATE TABLE IF NOT EXISTS accused (
       case_number TEXT PRIMARY KEY,
       full_name TEXT,
       dob TEXT,
@@ -359,7 +344,7 @@ function initializeTables() {
       driving_license TEXT,
       passport_number TEXT,
       employment_details TEXT,
-      monthly_income REAL,
+      monthly_income DOUBLE PRECISION,
       bank_account TEXT,
       cibil_score INTEGER,
       criminal_history TEXT,
@@ -367,11 +352,12 @@ function initializeTables() {
       prev_bails_granted INTEGER,
       prev_bails_honored INTEGER,
       absconding_count INTEGER,
-      travel_restricted INTEGER, -- boolean as 0/1
-      bank_balance_6m REAL
+      travel_restricted INTEGER,
+      bank_balance_6m DOUBLE PRECISION
     )`);
 
-    db.run(`CREATE TABLE IF NOT EXISTS sureties (
+    // 3. Create table sureties
+    await pool.query(`CREATE TABLE IF NOT EXISTS sureties (
       case_number TEXT PRIMARY KEY,
       surety_type TEXT,
       full_name TEXT,
@@ -380,49 +366,84 @@ function initializeTables() {
       aadhaar_number TEXT,
       pan_number TEXT,
       employment_details TEXT,
-      monthly_income REAL,
+      monthly_income DOUBLE PRECISION,
       active_bail_count INTEGER,
       property_address TEXT,
       survey_number TEXT,
-      property_valuation REAL,
+      property_valuation DOUBLE PRECISION,
       property_ownership_doc TEXT,
       property_revenue_record TEXT,
       encumbrance_status TEXT,
       mutation_status TEXT
     )`);
 
-    db.run(`CREATE TABLE IF NOT EXISTS arguments (
+    // 4. Create table arguments
+    await pool.query(`CREATE TABLE IF NOT EXISTS arguments (
       case_number TEXT PRIMARY KEY,
       prosecution TEXT,
       defence TEXT
     )`);
 
-    db.run(`CREATE TABLE IF NOT EXISTS checks (
+    // 5. Create table checks
+    await pool.query(`CREATE TABLE IF NOT EXISTS checks (
       case_number TEXT PRIMARY KEY,
-      checks_json TEXT -- JSON stringified result map
+      checks_json TEXT
+    )`);
+
+    // 6. Create table civil_cases
+    await pool.query(`CREATE TABLE IF NOT EXISTS civil_cases (
+      case_id TEXT PRIMARY KEY,
+      case_type TEXT,
+      civil_type TEXT,
+      court_number TEXT,
+      presiding_judge TEXT,
+      filing_date TEXT,
+      last_hearing_date TEXT,
+      next_hearing_date TEXT,
+      pending_days INTEGER,
+      order_status TEXT,
+      interim_orders TEXT,
+      decree_text TEXT,
+      postponed_to TEXT,
+      judge_remarks TEXT,
+      digital_signature TEXT,
+      petitioner TEXT,
+      respondent TEXT,
+      property_details TEXT,
+      relief_sought TEXT,
+      stage_summary TEXT,
+      hearing_history TEXT
     )`);
 
     // Check if seeding is required
-    db.get("SELECT count(*) as count FROM court_cases", (err, row) => {
-      if (row.count === 0) {
-        console.log("Seeding database with default court cases...");
-        seedDatabase();
-      }
-    });
-  });
+    const resCases = await pool.query("SELECT COUNT(*) FROM court_cases");
+    if (parseInt(resCases.rows[0].count, 10) === 0) {
+      console.log("Seeding database with default criminal cases...");
+      await seedDatabase();
+    }
+
+    const resCivil = await pool.query("SELECT COUNT(*) FROM civil_cases");
+    if (parseInt(resCivil.rows[0].count, 10) === 0) {
+      console.log("Seeding database with default civil plaints...");
+      await seedCivilDatabase();
+    }
+
+    console.log("Neon PostgreSQL tables initialized and verified.");
+  } catch (err) {
+    console.error('Error during PostgreSQL startup table setup:', err.message);
+  }
 }
 
 // REST API ROUTES
 app.post('/api/auth/login', (req, res) => {
   const { username, password, role } = req.body;
-  // Simple credential matching for demo purposes
-  if (password === 'password123') {
+  if (password === 'court123' || password === 'justice789' || password === 'civil456' || password === 'district456') {
     return res.status(200).json({ success: true, username, role, token: `JWT-MOCK-${username}-${role}` });
   }
   res.status(401).json({ success: false, message: 'Invalid credentials' });
 });
 
-app.get('/api/cases', (req, res) => {
+app.get('/api/cases', async (req, res) => {
   const query = `
     SELECT 
       c.*,
@@ -453,12 +474,9 @@ app.get('/api/cases', (req, res) => {
     ORDER BY c.filing_date DESC
   `;
 
-  db.all(query, [], (err, rows) => {
-    if (err) {
-      return res.status(500).json({ error: err.message });
-    }
-
-    const cases = rows.map(row => ({
+  try {
+    const result = await pool.query(query);
+    const cases = result.rows.map(row => ({
       caseNumber: row.case_number,
       firNumber: row.fir_number,
       ipcSections: row.ipc_sections,
@@ -524,101 +542,210 @@ app.get('/api/cases', (req, res) => {
       },
       checks: JSON.parse(row.checks_json || '{}')
     }));
-
     res.status(200).json(cases);
-  });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-app.post('/api/cases', (req, res) => {
+app.post('/api/cases', async (req, res) => {
   const c = req.body;
   const checks = runScoringForCase(c);
+  const client = await pool.connect();
 
-  db.serialize(() => {
-    db.run("BEGIN TRANSACTION");
+  try {
+    await client.query('BEGIN');
 
-    const ccStmt = db.prepare(`INSERT OR REPLACE INTO court_cases 
-      (case_number, fir_number, ipc_sections, date_of_arrest, police_station, presiding_judge, judge_id, court_location, previous_court_orders, filing_date, supporting_docs, bail_type, proposed_bail_amount, proposed_conditions, hearing_date, current_status, order_status, judge_remarks, digital_signature) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    const ccQuery = `
+      INSERT INTO court_cases 
+        (case_number, fir_number, ipc_sections, date_of_arrest, police_station, presiding_judge, judge_id, court_location, previous_court_orders, filing_date, supporting_docs, bail_type, proposed_bail_amount, proposed_conditions, hearing_date, current_status, order_status, judge_remarks, digital_signature) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+      ON CONFLICT (case_number) DO UPDATE SET
+        fir_number = EXCLUDED.fir_number, ipc_sections = EXCLUDED.ipc_sections, date_of_arrest = EXCLUDED.date_of_arrest,
+        police_station = EXCLUDED.police_station, presiding_judge = EXCLUDED.presiding_judge, judge_id = EXCLUDED.judge_id,
+        court_location = EXCLUDED.court_location, previous_court_orders = EXCLUDED.previous_court_orders, filing_date = EXCLUDED.filing_date,
+        supporting_docs = EXCLUDED.supporting_docs, bail_type = EXCLUDED.bail_type, proposed_bail_amount = EXCLUDED.proposed_bail_amount,
+        proposed_conditions = EXCLUDED.proposed_conditions, hearing_date = EXCLUDED.hearing_date, current_status = EXCLUDED.current_status,
+        order_status = EXCLUDED.order_status, judge_remarks = EXCLUDED.judge_remarks, digital_signature = EXCLUDED.digital_signature`;
     
-    ccStmt.run(
+    await client.query(ccQuery, [
       c.caseNumber, c.firNumber, c.ipcSections, c.dateOfArrest, c.policeStation, c.presidingJudge, c.judgeId, c.courtLocation, c.previousCourtOrders, c.filingDate,
       JSON.stringify(c.supportingDocs), c.bailType, c.proposedBailAmount, JSON.stringify(c.proposedConditions), c.hearingDate, c.currentStatus, c.orderStatus, c.judgeRemarks || '', c.digitalSignature || ''
-    );
-    ccStmt.finalize();
+    ]);
 
-    const accStmt = db.prepare(`INSERT OR REPLACE INTO accused 
-      (case_number, full_name, dob, fathers_name, address, mobile_number, aadhaar_number, pan_number, driving_license, passport_number, employment_details, monthly_income, bank_account, cibil_score, criminal_history, ncrb_count, prev_bails_granted, prev_bails_honored, absconding_count, travel_restricted, bank_balance_6m) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    const accQuery = `
+      INSERT INTO accused 
+        (case_number, full_name, dob, fathers_name, address, mobile_number, aadhaar_number, pan_number, driving_license, passport_number, employment_details, monthly_income, bank_account, cibil_score, criminal_history, ncrb_count, prev_bails_granted, prev_bails_honored, absconding_count, travel_restricted, bank_balance_6m) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+      ON CONFLICT (case_number) DO UPDATE SET
+        full_name = EXCLUDED.full_name, dob = EXCLUDED.dob, fathers_name = EXCLUDED.fathers_name, address = EXCLUDED.address,
+        mobile_number = EXCLUDED.mobile_number, aadhaar_number = EXCLUDED.aadhaar_number, pan_number = EXCLUDED.pan_number,
+        driving_license = EXCLUDED.driving_license, passport_number = EXCLUDED.passport_number, employment_details = EXCLUDED.employment_details,
+        monthly_income = EXCLUDED.monthly_income, bank_account = EXCLUDED.bank_account, cibil_score = EXCLUDED.cibil_score,
+        criminal_history = EXCLUDED.criminal_history, ncrb_count = EXCLUDED.ncrb_count, prev_bails_granted = EXCLUDED.prev_bails_granted,
+        prev_bails_honored = EXCLUDED.prev_bails_honored, absconding_count = EXCLUDED.absconding_count, travel_restricted = EXCLUDED.travel_restricted,
+        bank_balance_6m = EXCLUDED.bank_balance_6m`;
     
-    accStmt.run(
+    await client.query(accQuery, [
       c.caseNumber, c.accused.fullName, c.accused.dob, c.accused.fathersName, c.accused.address, c.accused.mobileNumber, c.accused.aadhaarNumber, c.accused.panNumber, c.accused.drivingLicense, c.accused.passportNumber,
       c.accused.employmentDetails, c.accused.monthlyIncome, c.accused.bankAccount, c.accused.cibilScore, c.accused.criminalHistory, c.accused.ncrbCount, c.accused.prevBailsGranted, c.accused.prevBailsHonored, c.accused.abscondingCount,
       c.accused.travelRestricted ? 1 : 0, c.accused.bankBalance6m
-    );
-    accStmt.finalize();
+    ]);
 
-    const surStmt = db.prepare(`INSERT OR REPLACE INTO sureties 
-      (case_number, surety_type, full_name, relation_to_accused, mobile_number, aadhaar_number, pan_number, employment_details, monthly_income, active_bail_count, property_address, survey_number, property_valuation, property_ownership_doc, property_revenue_record, encumbrance_status, mutation_status) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    const surQuery = `
+      INSERT INTO sureties 
+        (case_number, surety_type, full_name, relation_to_accused, mobile_number, aadhaar_number, pan_number, employment_details, monthly_income, active_bail_count, property_address, survey_number, property_valuation, property_ownership_doc, property_revenue_record, encumbrance_status, mutation_status) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+      ON CONFLICT (case_number) DO UPDATE SET
+        surety_type = EXCLUDED.surety_type, full_name = EXCLUDED.full_name, relation_to_accused = EXCLUDED.relation_to_accused,
+        mobile_number = EXCLUDED.mobile_number, aadhaar_number = EXCLUDED.aadhaar_number, pan_number = EXCLUDED.pan_number,
+        employment_details = EXCLUDED.employment_details, monthly_income = EXCLUDED.monthly_income, active_bail_count = EXCLUDED.active_bail_count,
+        property_address = EXCLUDED.property_address, survey_number = EXCLUDED.survey_number, property_valuation = EXCLUDED.property_valuation,
+        property_ownership_doc = EXCLUDED.property_ownership_doc, property_revenue_record = EXCLUDED.property_revenue_record,
+        encumbrance_status = EXCLUDED.encumbrance_status, mutation_status = EXCLUDED.mutation_status`;
     
-    surStmt.run(
+    await client.query(surQuery, [
       c.caseNumber, c.surety.suretyType, c.surety.fullName, c.surety.relationToAccused, c.surety.mobileNumber, c.surety.aadhaarNumber, c.surety.panNumber, c.surety.employmentDetails, c.surety.monthlyIncome, c.surety.activeBailCount,
       c.surety.propertyAddress, c.surety.surveyNumber, c.surety.propertyValuation, c.surety.propertyOwnershipDoc, c.surety.propertyRevenueRecord, c.surety.encumbranceStatus, c.surety.mutationStatus
+    ]);
+
+    await client.query(`
+      INSERT INTO arguments (case_number, prosecution, defence) VALUES ($1, $2, $3)
+      ON CONFLICT (case_number) DO UPDATE SET prosecution = EXCLUDED.prosecution, defence = EXCLUDED.defence`,
+      [c.caseNumber, c.arguments.prosecution, c.arguments.defence]
     );
-    surStmt.finalize();
 
-    const argStmt = db.prepare(`INSERT OR REPLACE INTO arguments (case_number, prosecution, defence) VALUES (?, ?, ?)`);
-    argStmt.run(c.caseNumber, c.arguments.prosecution, c.arguments.defence);
-    argStmt.finalize();
+    await client.query(`
+      INSERT INTO checks (case_number, checks_json) VALUES ($1, $2)
+      ON CONFLICT (case_number) DO UPDATE SET checks_json = EXCLUDED.checks_json`,
+      [c.caseNumber, JSON.stringify(checks)]
+    );
 
-    const chkStmt = db.prepare(`INSERT OR REPLACE INTO checks (case_number, checks_json) VALUES (?, ?)`);
-    chkStmt.run(c.caseNumber, JSON.stringify(checks));
-    chkStmt.finalize();
-
-    db.run("COMMIT", (err) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      c.checks = checks;
-      res.status(201).json(c);
-    });
-  });
+    await client.query('COMMIT');
+    c.checks = checks;
+    res.status(201).json(c);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
 });
 
-app.put('/api/cases/:caseNumber/verdict', (req, res) => {
+app.put('/api/cases/:caseNumber/verdict', async (req, res) => {
   const { caseNumber } = req.params;
   const { verdict, remarks, signature } = req.body;
+  const client = await pool.connect();
 
-  db.serialize(() => {
-    db.run("BEGIN TRANSACTION");
-
+  try {
+    await client.query('BEGIN');
     const statusStr = verdict === 'ADJOURNED' ? 'Adjourned' : 'Adjudicated';
-    db.run(
+    
+    await client.query(
       `UPDATE court_cases 
-       SET order_status = ?, judge_remarks = ?, digital_signature = ?, current_status = ? 
-       WHERE case_number = ?`,
+       SET order_status = $1, judge_remarks = $2, digital_signature = $3, current_status = $4 
+       WHERE case_number = $5`,
       [verdict, remarks, signature, statusStr, caseNumber]
     );
 
     if (verdict === 'GRANTED' || verdict === 'GRANTED_WITH_CONDITIONS') {
-      db.run(
+      await client.query(
         `UPDATE sureties 
          SET mutation_status = 'COMPLETED' 
-         WHERE case_number = ?`,
+         WHERE case_number = $5`,
         [caseNumber]
       );
     }
 
-    db.run("COMMIT", (err) => {
-      if (err) {
-        return res.status(500).json({ error: err.message });
-      }
-      res.status(200).json({ success: true, message: 'Verdict updated successfully' });
-    });
-  });
+    await client.query('COMMIT');
+    res.status(200).json({ success: true, message: 'Verdict updated successfully' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    res.status(500).json({ error: err.message });
+  } finally {
+    client.release();
+  }
 });
 
-function seedDatabase() {
+// Civil Plaints API Routes
+app.get('/api/civil-cases', async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM civil_cases ORDER BY filing_date DESC");
+    const cases = result.rows.map(row => ({
+      caseId: row.case_id,
+      caseType: row.case_type,
+      civilType: row.civil_type,
+      courtNumber: row.court_number,
+      presidingJudge: row.presiding_judge,
+      filingDate: row.filing_date,
+      lastHearingDate: row.last_hearing_date,
+      nextHearingDate: row.next_hearing_date,
+      pendingDays: row.pending_days,
+      orderStatus: row.order_status,
+      interimOrders: JSON.parse(row.interim_orders || '[]'),
+      decreeText: row.decree_text || '',
+      postponedTo: row.postponed_to || '',
+      judgeRemarks: row.judge_remarks || '',
+      digitalSignature: row.digital_signature || '',
+      petitioner: JSON.parse(row.petitioner || '{}'),
+      respondent: JSON.parse(row.respondent || '{}'),
+      propertyDetails: row.property_details || '',
+      reliefSought: row.relief_sought || '',
+      stageSummary: row.stage_summary || '',
+      hearingHistory: JSON.parse(row.hearing_history || '[]')
+    }));
+    res.status(200).json(cases);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/civil-cases', async (req, res) => {
+  const c = req.body;
+  try {
+    const query = `
+      INSERT INTO civil_cases 
+        (case_id, case_type, civil_type, court_number, presiding_judge, filing_date, last_hearing_date, next_hearing_date, pending_days, order_status, interim_orders, decree_text, postponed_to, judge_remarks, digital_signature, petitioner, respondent, property_details, relief_sought, stage_summary, hearing_history)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+      ON CONFLICT (case_id) DO UPDATE SET
+        case_type = EXCLUDED.case_type, civil_type = EXCLUDED.civil_type, court_number = EXCLUDED.court_number, presiding_judge = EXCLUDED.presiding_judge,
+        filing_date = EXCLUDED.filing_date, last_hearing_date = EXCLUDED.last_hearing_date, next_hearing_date = EXCLUDED.next_hearing_date,
+        pending_days = EXCLUDED.pending_days, order_status = EXCLUDED.order_status, interim_orders = EXCLUDED.interim_orders,
+        decree_text = EXCLUDED.decree_text, postponed_to = EXCLUDED.postponed_to, judge_remarks = EXCLUDED.judge_remarks,
+        digital_signature = EXCLUDED.digital_signature, petitioner = EXCLUDED.petitioner, respondent = EXCLUDED.respondent,
+        property_details = EXCLUDED.property_details, relief_sought = EXCLUDED.relief_sought, stage_summary = EXCLUDED.stage_summary,
+        hearing_history = EXCLUDED.hearing_history`;
+    
+    await pool.query(query, [
+      c.caseId || c.case_id, c.caseType, c.civilType, c.courtNumber, c.presidingJudge, c.filingDate, c.lastHearingDate, c.nextHearingDate, c.pendingDays || 0, c.orderStatus,
+      JSON.stringify(c.interimOrders || []), c.decreeText || '', c.postponedTo || '', c.judgeRemarks || '', c.digitalSignature || '',
+      JSON.stringify(c.petitioner || {}), JSON.stringify(c.respondent || {}), c.propertyDetails || '', c.reliefSought || '', c.stageSummary || '',
+      JSON.stringify(c.hearingHistory || [])
+    ]);
+    res.status(201).json(c);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/civil-cases/:caseId/verdict', async (req, res) => {
+  const { caseId } = req.params;
+  const { verdict, remarks, signature, decreeText } = req.body;
+  try {
+    await pool.query(
+      `UPDATE civil_cases 
+       SET order_status = $1, judge_remarks = $2, digital_signature = $3, decree_text = $4 
+       WHERE case_id = $5`,
+      [verdict, remarks, signature, decreeText || '', caseId]
+    );
+    res.status(200).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Database Seed Helpers
+async function seedDatabase() {
   const seedCases = [
     {
       caseNumber: 'BMS/2026/0042',
@@ -699,30 +826,30 @@ function seedDatabase() {
       supportingDocs: ['Character Certificate'],
       bailType: 'Second Bail',
       proposedBailAmount: 150000,
-      proposedConditions: ['Weekly Reporting', 'Passport Deposit', 'Witness Contact Barred'],
+      proposedConditions: ['Daily Police Station Attendance', 'Surety Obligation Complete'],
       hearingDate: '2026-05-29T11:00',
-      currentStatus: 'Checking',
+      currentStatus: 'Ready for Judge',
       orderStatus: 'PENDING',
       judgeRemarks: '',
       digitalSignature: '',
       accused: {
-        fullName: 'Suresh Babu',
-        dob: '1998-05-10',
-        fathersName: 'Rama Rao',
-        address: 'Danavaipeta, Rajamundry',
-        mobileNumber: '9440987654',
-        aadhaarNumber: '246813579024',
-        panNumber: 'SURES1998R',
-        drivingLicense: 'AP05-2023-9847291',
-        passportNumber: 'V2948194',
-        employmentDetails: 'Student',
+        fullName: 'Rajesh Kumar Ganti',
+        dob: '1990-04-12',
+        fathersName: 'Venkata Rao Ganti',
+        address: 'Bhimavaram Road, Rajamundry',
+        mobileNumber: '9440123456',
+        aadhaarNumber: '987654321098',
+        panNumber: 'GANTR1990K',
+        drivingLicense: 'AP05-2026-0098231',
+        passportNumber: 'Z9823746',
+        employmentDetails: 'Unemployed',
         monthlyIncome: 0,
-        bankAccount: 'HDFC A/c 93847294827',
+        bankAccount: 'Andhra Bank A/c 9283749283',
         cibilScore: 580,
-        criminalHistory: '1 prior arrest.',
+        criminalHistory: '1 prior pending assault charge.',
         ncrbCount: 1,
-        prevBailsGranted: 0,
-        prevBailsHonored: 0,
+        prevBailsGranted: 1,
+        prevBailsHonored: 1,
         abscondingCount: 0,
         travelRestricted: false,
         bankBalance6m: 12000
@@ -752,35 +879,137 @@ function seedDatabase() {
     }
   ];
 
-  seedCases.forEach(c => {
+  for (const c of seedCases) {
     const checks = runScoringForCase(c);
-    db.serialize(() => {
-      db.run(`INSERT INTO court_cases 
-        (case_number, fir_number, ipc_sections, date_of_arrest, police_station, presiding_judge, judge_id, court_location, previous_court_orders, filing_date, supporting_docs, bail_type, proposed_bail_amount, proposed_conditions, hearing_date, current_status, order_status, judge_remarks, digital_signature)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [c.caseNumber, c.firNumber, c.ipcSections, c.dateOfArrest, c.policeStation, c.presidingJudge, c.judgeId, c.courtLocation, c.previousCourtOrders, c.filingDate,
-        JSON.stringify(c.supportingDocs), c.bailType, c.proposedBailAmount, JSON.stringify(c.proposedConditions), c.hearingDate, c.currentStatus, c.orderStatus, c.judgeRemarks, c.digitalSignature]
-      );
-      
-      db.run(`INSERT INTO accused 
-        (case_number, full_name, dob, fathers_name, address, mobile_number, aadhaar_number, pan_number, driving_license, passport_number, employment_details, monthly_income, bank_account, cibil_score, criminal_history, ncrb_count, prev_bails_granted, prev_bails_honored, absconding_count, travel_restricted, bank_balance_6m)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [c.caseNumber, c.accused.fullName, c.accused.dob, c.accused.fathersName, c.accused.address, c.accused.mobileNumber, c.accused.aadhaarNumber, c.accused.panNumber, c.accused.drivingLicense, c.accused.passportNumber,
-        c.accused.employmentDetails, c.accused.monthlyIncome, c.accused.bankAccount, c.accused.cibilScore, c.accused.criminalHistory, c.accused.ncrbCount, c.accused.prevBailsGranted, c.accused.prevBailsHonored, c.accused.abscondingCount,
-        c.accused.travelRestricted ? 1 : 0, c.accused.bankBalance6m]
-      );
+    const ccQuery = `
+      INSERT INTO court_cases 
+        (case_number, fir_number, ipc_sections, date_of_arrest, police_station, presiding_judge, judge_id, court_location, previous_court_orders, filing_date, supporting_docs, bail_type, proposed_bail_amount, proposed_conditions, hearing_date, current_status, order_status, judge_remarks, digital_signature) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`;
+    await pool.query(ccQuery, [
+      c.caseNumber, c.firNumber, c.ipcSections, c.dateOfArrest, c.policeStation, c.presidingJudge, c.judgeId, c.courtLocation, c.previousCourtOrders, c.filingDate,
+      JSON.stringify(c.supportingDocs), c.bailType, c.proposedBailAmount, JSON.stringify(c.proposedConditions), c.hearingDate, c.currentStatus, c.orderStatus, c.judgeRemarks, c.digitalSignature
+    ]);
 
-      db.run(`INSERT INTO sureties 
-        (case_number, surety_type, full_name, relation_to_accused, mobile_number, aadhaar_number, pan_number, employment_details, monthly_income, active_bail_count, property_address, survey_number, property_valuation, property_ownership_doc, property_revenue_record, encumbrance_status, mutation_status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [c.caseNumber, c.surety.suretyType, c.surety.fullName, c.surety.relationToAccused, c.surety.mobileNumber, c.surety.aadhaarNumber, c.surety.panNumber, c.surety.employmentDetails, c.surety.monthlyIncome, c.surety.activeBailCount,
-        c.surety.propertyAddress, c.surety.surveyNumber, c.surety.propertyValuation, c.surety.propertyOwnershipDoc, c.surety.propertyRevenueRecord, c.surety.encumbranceStatus, c.surety.mutationStatus]
-      );
+    const accQuery = `
+      INSERT INTO accused 
+        (case_number, full_name, dob, fathers_name, address, mobile_number, aadhaar_number, pan_number, driving_license, passport_number, employment_details, monthly_income, bank_account, cibil_score, criminal_history, ncrb_count, prev_bails_granted, prev_bails_honored, absconding_count, travel_restricted, bank_balance_6m) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)`;
+    await pool.query(accQuery, [
+      c.caseNumber, c.accused.fullName, c.accused.dob, c.accused.fathersName, c.accused.address, c.accused.mobileNumber, c.accused.aadhaarNumber, c.accused.panNumber, c.accused.drivingLicense, c.accused.passportNumber,
+      c.accused.employmentDetails, c.accused.monthlyIncome, c.accused.bankAccount, c.accused.cibilScore, c.accused.criminalHistory, c.accused.ncrbCount, c.accused.prevBailsGranted, c.accused.prevBailsHonored, c.accused.abscondingCount,
+      c.accused.travelRestricted ? 1 : 0, c.accused.bankBalance6m
+    ]);
 
-      db.run(`INSERT INTO arguments (case_number, prosecution, defence) VALUES (?, ?, ?)`, [c.caseNumber, c.arguments.prosecution, c.arguments.defence]);
-      db.run(`INSERT INTO checks (case_number, checks_json) VALUES (?, ?)`, [c.caseNumber, JSON.stringify(checks)]);
-    });
-  });
+    const surQuery = `
+      INSERT INTO sureties 
+        (case_number, surety_type, full_name, relation_to_accused, mobile_number, aadhaar_number, pan_number, employment_details, monthly_income, active_bail_count, property_address, survey_number, property_valuation, property_ownership_doc, property_revenue_record, encumbrance_status, mutation_status) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`;
+    await pool.query(surQuery, [
+      c.caseNumber, c.surety.suretyType, c.surety.fullName, c.surety.relationToAccused, c.surety.mobileNumber, c.surety.aadhaarNumber, c.surety.panNumber, c.surety.employmentDetails, c.surety.monthlyIncome, c.surety.activeBailCount,
+      c.surety.propertyAddress, c.surety.surveyNumber, c.surety.propertyValuation, c.surety.propertyOwnershipDoc, c.surety.propertyRevenueRecord, c.surety.encumbranceStatus, c.surety.mutationStatus
+    ]);
+
+    await pool.query(`INSERT INTO arguments (case_number, prosecution, defence) VALUES ($1, $2, $3)`, [c.caseNumber, c.arguments.prosecution, c.arguments.defence]);
+    await pool.query(`INSERT INTO checks (case_number, checks_json) VALUES ($1, $2)`, [c.caseNumber, JSON.stringify(checks)]);
+  }
+}
+
+async function seedCivilDatabase() {
+  const seedCivilCases = [
+    {
+      caseId: 'CL-2024-0012',
+      caseType: 'CIVIL',
+      civilType: 'Property Dispute',
+      courtNumber: 'Civil Court Room 1, Rajamundry',
+      presidingJudge: 'Hon\'ble J. Kameswara Rao',
+      filingDate: '2024-03-14',
+      lastHearingDate: '2026-05-10',
+      nextHearingDate: '2026-07-05',
+      pendingDays: 836,
+      orderStatus: 'PENDING',
+      interimOrders: ['Interim injunction granted — respondent restrained from selling property (Order dt. 2024-07-01)'],
+      decreeText: '',
+      postponedTo: '',
+      judgeRemarks: '',
+      digitalSignature: '',
+      petitioner: {
+        name: 'Smt. Padmavathi Devi Alluri',
+        advocate: 'Adv. K. Ramachandra Rao',
+        address: 'D.No 2-4-17, Tadepalligudem Road, Rajamundry',
+        aadhaar: '234567890123',
+        mobileNumber: '9441234567'
+      },
+      respondent: {
+        name: 'Sri. Venkata Rao Alluri',
+        advocate: 'Adv. P. Subrahmanyam',
+        address: 'D.No 2-4-17, Tadepalligudem Road, Rajamundry',
+        aadhaar: '345678901234',
+        mobileNumber: '9440987654'
+      },
+      propertyDetails: 'Agricultural land of 2.45 acres, Survey No. RS-129/4-A, Tadepalligudem, East Godavari. Disputed succession after death of Sri. Narayana Rao Alluri (2022). Petitioner claims sole heirship.',
+      reliefSought: 'Declaration of ownership and possession of the disputed land. Partition decree as legal heir.',
+      stageSummary: 'Arguments concluded. Evidence recording complete. Awaiting final judgment.',
+      hearingHistory: [
+        { date: '2024-04-01', note: 'Plaint filed. Summons issued to respondent.' },
+        { date: '2024-06-15', note: 'Written statement filed by respondent. Issues framed.' },
+        { date: '2024-07-01', note: 'Interim injunction granted. Respondent restrained from alienation.' },
+        { date: '2025-02-12', note: 'Petitioner examination complete. 3 witnesses examined.' },
+        { date: '2025-09-04', note: 'Respondent evidence recording concluded.' },
+        { date: '2026-05-10', note: 'Final arguments heard. Reserved for judgment.' }
+      ]
+    },
+    {
+      caseId: 'CL-2025-0034',
+      caseType: 'CIVIL',
+      civilType: 'Money Recovery Suit',
+      courtNumber: 'Civil Court Room 1, Rajamundry',
+      presidingJudge: 'Hon\'ble J. Kameswara Rao',
+      filingDate: '2025-01-20',
+      lastHearingDate: '2026-06-01',
+      nextHearingDate: '2026-07-18',
+      pendingDays: 523,
+      orderStatus: 'INTERIM_ORDER',
+      interimOrders: ['Attachment before judgment issued on defendant\'s bank accounts (Order dt. 2025-03-10)'],
+      decreeText: '',
+      postponedTo: '',
+      judgeRemarks: 'Attachment before judgment order sustained. Defendant directed to file asset disclosure statement by next hearing.',
+      digitalSignature: 'SHA-256/CIVIL-2025-0034/KAMESWARA',
+      petitioner: {
+        name: 'Sri. K. Venkateswarlu',
+        advocate: 'Adv. S. Malleswara Rao',
+        address: 'D.No 40-5-12, Labbipet, Vijayawada',
+        aadhaar: '456789012345',
+        mobileNumber: '9848012345'
+      },
+      respondent: {
+        name: 'Sri. P. Satyanarayana',
+        advocate: 'Adv. M. Kanaka Raju',
+        address: 'D.No 3-2-9, Danavaipeta, Rajamundry',
+        aadhaar: '567890123456',
+        mobileNumber: '9949012345'
+      },
+      propertyDetails: 'Promissory note execution date 2023-04-10 for principal sum of ₹10,00,000 at 18% p.a. interest. Default in repayment.',
+      reliefSought: 'Recovery of sum of ₹13,60,000 (inclusive of interest) with cost of suit.',
+      stageSummary: 'Trial in progress. Defendant examination scheduled.',
+      hearingHistory: [
+        { date: '2025-02-10', note: 'Suit instituted. Summons served.' },
+        { date: '2025-03-10', note: 'Interim application for attachment before judgment allowed.' }
+      ]
+    }
+  ];
+
+  for (const c of seedCivilCases) {
+    const query = `
+      INSERT INTO civil_cases 
+        (case_id, case_type, civil_type, court_number, presiding_judge, filing_date, last_hearing_date, next_hearing_date, pending_days, order_status, interim_orders, decree_text, postponed_to, judge_remarks, digital_signature, petitioner, respondent, property_details, relief_sought, stage_summary, hearing_history)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)`;
+    await pool.query(query, [
+      c.caseId, c.caseType, c.civilType, c.courtNumber, c.presidingJudge, c.filingDate, c.lastHearingDate, c.nextHearingDate, c.pendingDays, c.orderStatus,
+      JSON.stringify(c.interimOrders), c.decreeText, c.postponedTo, c.judgeRemarks, c.digitalSignature,
+      JSON.stringify(c.petitioner), JSON.stringify(c.respondent), c.propertyDetails, c.reliefSought, c.stageSummary,
+      JSON.stringify(c.hearingHistory)
+    ]);
+  }
 }
 
 app.listen(PORT, () => {
