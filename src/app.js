@@ -1036,6 +1036,7 @@ const AppState = new ApplicationState();
 
 // BIND DOM ROUTER
 function updateUI() {
+    window.scrollTo(0, 0);
     const root = document.getElementById('app-root');
     
     // Render Login Screen if not logged in
