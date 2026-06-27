@@ -1,12 +1,15 @@
 /**
- * VERDIQO: PRESIDING JUDGE DASHBOARD (MODULE 4B)
+ * VERDIQO: SESSIONS JUDGE DASHBOARD (CRIMINAL BENCH)
  * Quantex Intelligence Systems (P) Ltd.
- * The core judicial decision support dashboard.
+ * Sessions Court Judge — Criminal Bail Applications ONLY.
+ * Civil plaints are handled by DashboardCivilJudge.
  */
 
 export const DashboardJudge = {
     render(container, state, onUpdate) {
-        // Find selected case or default to first
+        if (!state.judgeActiveMobileTab) state.judgeActiveMobileTab = 'listings';
+
+        // Criminal case selection
         let selectedCase = null;
         if (state.selectedCaseNumber) {
             selectedCase = state.cases.find(c => c.caseNumber === state.selectedCaseNumber);
@@ -16,14 +19,55 @@ export const DashboardJudge = {
             state.selectedCaseNumber = selectedCase.caseNumber;
         }
 
-        // Initialize active mobile view tab if not set
-        if (!state.judgeActiveMobileTab) {
-            state.judgeActiveMobileTab = 'listings'; // 'listings' or 'details'
-        }
+        // Criminal docket stats
+        const totalCases    = state.cases.length;
+        const pendingCount  = state.cases.filter(c => c.orderStatus === 'PENDING').length;
+        const grantedCount  = state.cases.filter(c => c.orderStatus === 'GRANTED' || c.orderStatus === 'GRANTED_WITH_CONDITIONS').length;
+        const deniedCount   = state.cases.filter(c => c.orderStatus === 'DENIED').length;
+        const longestPending = state.cases.length > 0
+            ? Math.max(...state.cases.filter(c => c.orderStatus === 'PENDING').map(c => Math.floor((Date.now() - new Date(c.filingDate)) / 86400000)))
+            : 0;
 
-        // Render Sidebar and Detail Layout
         container.innerHTML = `
-            <!-- Responsive Mobile Tab Switcher (Visible only on mobile via CSS) -->
+            <!-- PAGE HEADER -->
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; flex-wrap:wrap; gap:12px;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:40px; height:40px; background:linear-gradient(135deg, rgba(201,168,76,0.3), rgba(201,168,76,0.1)); border:2px solid var(--color-gold); border-radius:10px; display:flex; align-items:center; justify-content:center;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="var(--color-gold)" stroke-width="2"><path d="M12 2v20M5 7h14M5 7L3 13h4L5 7zm14 0l-2 6h4l-2-6zM12 22h6M12 22H6"/></svg>
+                    </div>
+                    <div>
+                        <h2 style="font-size:18px; font-weight:800; color:var(--color-text-main); font-family:var(--font-headings);">Criminal Sessions Court</h2>
+                        <p style="font-size:12px; color:var(--color-gold); font-weight:700;">${state.currentUser?.designation || 'Sessions Judge'} &mdash; ${state.currentUser?.court || 'Sessions Court Room 2'}</p>
+                    </div>
+                </div>
+                <span style="font-size:11px; padding:4px 10px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:20px; color:#f87171; font-weight:700;">&#128275; CRIMINAL BENCH ONLY</span>
+            </div>
+
+            <!-- CRIMINAL DOCKET SUMMARY CARDS -->
+            <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:12px; margin-bottom:18px;">
+                <div style="background:linear-gradient(135deg, rgba(201,168,76,0.14) 0%, rgba(201,168,76,0.04) 100%); border:1px solid var(--color-gold-dim); border-radius:10px; padding:14px 16px;">
+                    <div style="font-size:10px; font-weight:800; letter-spacing:1px; color:var(--color-gold); text-transform:uppercase; margin-bottom:8px;">Bail Applications</div>
+                    <div style="font-size:30px; font-weight:800; color:var(--color-text-main); font-family:var(--font-headings); line-height:1;">${totalCases}</div>
+                    <div style="font-size:11px; color:var(--color-text-muted); margin-top:6px;">Total on session docket</div>
+                </div>
+                <div style="background:linear-gradient(135deg, rgba(251,146,60,0.12) 0%, rgba(251,146,60,0.04) 100%); border:1px solid rgba(251,146,60,0.25); border-radius:10px; padding:14px 16px;">
+                    <div style="font-size:10px; font-weight:800; letter-spacing:1px; color:#fb923c; text-transform:uppercase; margin-bottom:8px;">Pending Decision</div>
+                    <div style="font-size:30px; font-weight:800; color:var(--color-text-main); font-family:var(--font-headings); line-height:1;">${pendingCount}</div>
+                    <div style="font-size:11px; color:var(--color-text-muted); margin-top:6px;">Oldest: ${longestPending > 0 ? longestPending + ' days' : 'N/A'}</div>
+                </div>
+                <div style="background:linear-gradient(135deg, rgba(74,222,128,0.12) 0%, rgba(74,222,128,0.04) 100%); border:1px solid rgba(74,222,128,0.25); border-radius:10px; padding:14px 16px;">
+                    <div style="font-size:10px; font-weight:800; letter-spacing:1px; color:var(--color-success); text-transform:uppercase; margin-bottom:8px;">Bail Granted</div>
+                    <div style="font-size:30px; font-weight:800; color:var(--color-text-main); font-family:var(--font-headings); line-height:1;">${grantedCount}</div>
+                    <div style="font-size:11px; color:var(--color-text-muted); margin-top:6px;">Granted / with conditions</div>
+                </div>
+                <div style="background:linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(239,68,68,0.03) 100%); border:1px solid rgba(239,68,68,0.2); border-radius:10px; padding:14px 16px;">
+                    <div style="font-size:10px; font-weight:800; letter-spacing:1px; color:var(--color-danger); text-transform:uppercase; margin-bottom:8px;">Bail Denied</div>
+                    <div style="font-size:30px; font-weight:800; color:var(--color-text-main); font-family:var(--font-headings); line-height:1;">${deniedCount}</div>
+                    <div style="font-size:11px; color:var(--color-text-muted); margin-top:6px;">Remand / rejection orders</div>
+                </div>
+            </div>
+
+            <!-- Responsive Mobile Tab Switcher -->
             <div class="judge-mobile-tabs" style="display: none; margin-bottom: 16px; background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 6px; gap: 8px;">
                 <button class="btn mobile-tab-btn" id="judge-m-tab-listings" style="flex: 1; padding: 10px; font-size: 13px; text-align: center; border: 1px solid ${state.judgeActiveMobileTab === 'listings' ? 'var(--color-gold)' : 'var(--color-border)'}; background: ${state.judgeActiveMobileTab === 'listings' ? 'rgba(201, 168, 76, 0.1)' : 'transparent'}; color: ${state.judgeActiveMobileTab === 'listings' ? 'var(--color-gold-light)' : 'var(--color-text-muted)'}; font-weight: 700;">
                     ${state.translate("Hearings List", "सुनवाई सूची")}
@@ -35,13 +79,13 @@ export const DashboardJudge = {
 
             <div class="judge-container ${state.judgeActiveMobileTab}">
                 <!-- LEFT SIDEBAR: HEARING LIST -->
-                <div class="hearing-list-sidebar">
+                <div class="hearing-list-sidebar" style="border-top:3px solid var(--color-gold);">
                     <div class="sidebar-title" style="display:flex; justify-content:space-between; align-items:center;">
                         <span style="display:flex; align-items:center; gap:6px;">
                             <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                            <span>${state.translate("Today's Hear Listings", "आज की सुनवाई सूची")}</span>
+                            <span>${state.translate("Today's Bail Hearings", "आज की ज़मानत सुनवाई")}</span>
                         </span>
-                        <span class="badge" style="background-color: var(--color-gold-dim); color: #ffffff; font-family: var(--font-mono); white-space: nowrap; padding: 3px 8px; border-radius: 4px; display: inline-block;">${state.cases.length} Listings</span>
+                        <span class="badge" style="background-color: var(--color-gold-dim); color: #ffffff; font-family: var(--font-mono); white-space: nowrap; padding: 3px 8px; border-radius: 4px; display: inline-block;">${state.cases.length} Cases</span>
                     </div>
                     <div class="hearing-list" id="judge-hearing-list"></div>
                 </div>
@@ -54,22 +98,14 @@ export const DashboardJudge = {
         // Bind Mobile Tab Click Events
         const tabListings = container.querySelector('#judge-m-tab-listings');
         const tabDetails = container.querySelector('#judge-m-tab-details');
-        
         if (tabListings && tabDetails) {
-            tabListings.addEventListener('click', () => {
-                state.judgeActiveMobileTab = 'listings';
-                onUpdate();
-            });
-            tabDetails.addEventListener('click', () => {
-                state.judgeActiveMobileTab = 'details';
-                onUpdate();
-            });
+            tabListings.addEventListener('click', () => { state.judgeActiveMobileTab = 'listings'; onUpdate(); });
+            tabDetails.addEventListener('click', () => { state.judgeActiveMobileTab = 'details'; onUpdate(); });
         }
 
         this.renderHearingList(container.querySelector('#judge-hearing-list'), state, onUpdate);
         this.renderCaseDetail(container.querySelector('#judge-hearing-detail'), selectedCase, state, onUpdate);
     },
-
     renderHearingList(sidebarList, state, onUpdate) {
         let itemsHtml = '';
         
@@ -100,14 +136,14 @@ export const DashboardJudge = {
 
             const isSubmitted = c.orderStatus !== 'PENDING';
             const statusLabel = isSubmitted 
-                ? `<span style="font-size: 9px; font-weight:800; color:var(--color-success); border:1px solid var(--color-success); padding:1px 6px; border-radius:10px; background:var(--color-success-bg); white-space:nowrap; text-transform:uppercase;">✓ Signed</span>` 
+                ? `<span style="font-size: 9px; font-weight:800; color:var(--color-success); border:1px solid var(--color-success); padding:1px 6px; border-radius:10px; background:var(--color-success-bg); white-space:nowrap; text-transform:uppercase;">&#10003; Signed</span>` 
                 : `<span style="height: 10px; width: 10px; background-color: ${dotColor}; border-radius: 50%; display: inline-block;"></span>`;
 
             return `
                 <div class="hearing-item ${isSelected ? 'active' : ''} ${isSubmitted ? 'hearing-item-submitted' : ''}" data-case="${c.caseNumber}" style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
                     <div class="hearing-meta" style="flex:1;">
                         <h4 style="${isSubmitted ? 'text-decoration:none; opacity: 0.85;' : ''}">${c.accused.fullName}</h4>
-                        <p>${c.caseNumber} • ${c.bailType}</p>
+                        <p>${c.caseNumber} &bull; ${c.bailType}</p>
                     </div>
                     <div style="display:flex; align-items:center; gap:8px;">
                         ${statusLabel}
@@ -152,6 +188,9 @@ export const DashboardJudge = {
         });
     },
 
+    // ────────────────────────────────────────────────────────────────────────
+    //  CRIMINAL BAIL — CASE DETAIL (unchanged logic)
+    // ────────────────────────────────────────────────────────────────────────
     renderCaseDetail(detailContainer, c, state, onUpdate) {
         if (!c) {
             detailContainer.innerHTML = `
@@ -199,13 +238,13 @@ export const DashboardJudge = {
             </div>
 
             <!-- THREE PANELS SECTION -->
-            <div class="case-panels-layout">
+            <div class="case-panels-layout" style="margin-bottom: 20px;">
                 <!-- PANEL 1: ACCUSED INFORMATION -->
                 <div class="panel-col">
                     <div class="panel-inner">
                         <div class="panel-header" style="display:flex; align-items:center; gap:6px;">
                             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                            <span>Accused Verification & Checklist</span>
+                            <span>Accused Verification &amp; Checklist</span>
                         </div>
                         <div class="panel-body" style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto;">
                             <!-- UIDAI Info -->
@@ -222,15 +261,15 @@ export const DashboardJudge = {
                             <div class="info-item" style="margin-bottom: 0; padding-bottom: 8px; border-bottom: 1px solid var(--color-border);">
                                 <label style="font-weight:700; color:var(--color-gold-light); display:flex; align-items:center; gap:6px; margin-bottom:4px;">
                                     <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:var(--color-gold-dim); color:#ffffff; font-size:10px; font-weight:bold;">1</span>
-                                    <span>Criminal History & Convictions</span>
+                                    <span>Criminal History &amp; Convictions</span>
                                 </label>
                                 <div class="val" style="font-size:11.5px; line-height:1.45; color:var(--color-text-main); margin-left:18px;">
                                     <div style="margin-bottom: 4px; display:flex; align-items:flex-start; gap:6px;">
-                                        <span style="color:var(--color-gold); font-weight:700;">•</span>
+                                        <span style="color:var(--color-gold); font-weight:700;">&bull;</span>
                                         <span><strong>Previous Case History (NCRB):</strong> ${c.accused.ncrbCount > 0 ? `<span style="color:var(--color-danger); font-weight:700;">${c.accused.ncrbCount} Prior Case(s) Found</span>` : '<span style="color:var(--color-success);">Clean (No prior FIR records found)</span>'}</span>
                                     </div>
                                     <div style="display:flex; align-items:flex-start; gap:6px;">
-                                        <span style="color:var(--color-gold); font-weight:700;">•</span>
+                                        <span style="color:var(--color-gold); font-weight:700;">&bull;</span>
                                         <span><strong>Court Conviction Records:</strong> Verified clean. No previous judicial convictions are registered against the accused.</span>
                                     </div>
                                 </div>
@@ -244,24 +283,24 @@ export const DashboardJudge = {
                                 </label>
                                 <div class="val" style="font-size:11.5px; line-height:1.45; color:var(--color-text-main); margin-left:18px;">
                                     <div style="margin-bottom: 4px; display:flex; align-items:flex-start; gap:6px;">
-                                        <span style="color:var(--color-success); font-weight:700;">✓</span>
+                                        <span style="color:var(--color-success); font-weight:700;">&#10003;</span>
                                         <span><strong>Community Ties:</strong> Verified local roots at ${c.accused.address}</span>
                                     </div>
                                     <div style="margin-bottom: 4px; display:flex; align-items:flex-start; gap:6px;">
-                                        <span style="color:var(--color-success); font-weight:700;">✓</span>
+                                        <span style="color:var(--color-success); font-weight:700;">&#10003;</span>
                                         <span><strong>Previous Bail Compliance:</strong> Good (${c.accused.prevBailsHonored}/${c.accused.prevBailsGranted} bails honored successfully)</span>
                                     </div>
                                     <div style="margin-bottom: 4px; display:flex; align-items:flex-start; gap:6px;">
-                                        <span style="color:${c.accused.abscondingCount > 0 ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight:700;">${c.accused.abscondingCount > 0 ? '⚠' : '✓'}</span>
+                                        <span style="color:${c.accused.abscondingCount > 0 ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight:700;">${c.accused.abscondingCount > 0 ? '&#9888;' : '&#10003;'}</span>
                                         <span><strong>Absconding Incidents:</strong> ${c.accused.abscondingCount > 0 ? `<strong style="color:var(--color-danger);">${c.accused.abscondingCount} prior failure(s) to appear</strong>` : '0 instances (No defaults recorded)'}</span>
                                     </div>
                                     <div style="margin-bottom: 4px; display:flex; align-items:flex-start; gap:6px;">
-                                        <span style="color:${c.accused.travelRestricted ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight:700;">${c.accused.travelRestricted ? '⚠' : '✓'}</span>
-                                        <span><strong>Travel History & Watchlist:</strong> ${c.accused.travelRestricted ? '<span style="color:var(--color-danger); font-weight:700;">RESTRICTED / TRAVEL WATCHLIST ACTIVE</span>' : 'Clear (No active immigration warnings)'}</span>
+                                        <span style="color:${c.accused.travelRestricted ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight:700;">${c.accused.travelRestricted ? '&#9888;' : '&#10003;'}</span>
+                                        <span><strong>Travel History &amp; Watchlist:</strong> ${c.accused.travelRestricted ? '<span style="color:var(--color-danger); font-weight:700;">RESTRICTED / TRAVEL WATCHLIST ACTIVE</span>' : 'Clear (No active immigration warnings)'}</span>
                                     </div>
                                     <div style="display:flex; align-items:flex-start; gap:6px;">
-                                        <span style="color:var(--color-success); font-weight:700;">✓</span>
-                                        <span><strong>Liquid Assets:</strong> Bank balance ₹${parseFloat(c.accused.bankBalance6m || 0).toLocaleString('en-IN')} (Verified via FIU API)</span>
+                                        <span style="color:var(--color-success); font-weight:700;">&#10003;</span>
+                                        <span><strong>Liquid Assets:</strong> Bank balance &#8377;${parseFloat(c.accused.bankBalance6m || 0).toLocaleString('en-IN')} (Verified via FIU API)</span>
                                     </div>
                                 </div>
                             </div>
@@ -274,19 +313,19 @@ export const DashboardJudge = {
                                 </label>
                                 <div class="val" style="font-size:11.5px; line-height:1.45; color:var(--color-text-main); margin-left:18px;">
                                     <div style="margin-bottom: 4px; display:flex; align-items:flex-start; gap:6px;">
-                                        <span style="color:${c.ipcSections.includes('302') ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight:700;">●</span>
+                                        <span style="color:${c.ipcSections.includes('302') ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight:700;">&#9679;</span>
                                         <span><strong>Bailable vs. Non-Bailable:</strong> ${c.ipcSections.includes('302') ? '<span style="color:var(--color-danger); font-weight:700;">NON-BAILABLE (IPC 302 - Murder)</span>' : '<span style="color:var(--color-success); font-weight:700;">BAILABLE UNDER CONDITIONS (IPC 420 / 409 / 468)</span>'}</span>
                                     </div>
                                     <div style="margin-bottom: 4px; display:flex; align-items:flex-start; gap:6px;">
-                                        <span style="color:${c.ipcSections.includes('302') ? 'var(--color-danger)' : 'var(--color-warning)'}; font-weight:700;">●</span>
+                                        <span style="color:${c.ipcSections.includes('302') ? 'var(--color-danger)' : 'var(--color-warning)'}; font-weight:700;">&#9679;</span>
                                         <span><strong>Offence Seriousness:</strong> ${c.ipcSections.includes('302') ? '<span style="color:var(--color-danger); font-weight:700;">CRITICAL (Life/Death Penalty Guidelines)</span>' : '<span style="color:var(--color-warning); font-weight:700;">MODERATE (Financial terms up to 7 years)</span>'}</span>
                                     </div>
                                     <div style="margin-bottom: 4px; display:flex; align-items:flex-start; gap:6px;">
-                                        <span style="color:${c.ipcSections.includes('302') ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight:700;">●</span>
+                                        <span style="color:${c.ipcSections.includes('302') ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight:700;">&#9679;</span>
                                         <span><strong>Violence Involved:</strong> ${c.ipcSections.includes('302') ? '<span style="color:var(--color-danger); font-weight:700;">HIGH (Physical Homicide / Weapons recovered)</span>' : '<span style="color:var(--color-success);">NONE (Economic / Documentation Offence)</span>'}</span>
                                     </div>
                                     <div style="display:flex; align-items:flex-start; gap:6px;">
-                                        <span style="color:var(--color-success); font-weight:700;">●</span>
+                                        <span style="color:var(--color-success); font-weight:700;">&#9679;</span>
                                         <span><strong>Evidence Strength:</strong> ${c.ipcSections.includes('302') ? '<span style="color:var(--color-danger); font-weight:700;">STRONG (Direct eyewitness testimony + physical forensics)</span>' : '<span style="color:var(--color-warning); font-weight:700;">MODERATE (Ledger circumstantial sync)</span>'}</span>
                                     </div>
                                 </div>
@@ -300,38 +339,53 @@ export const DashboardJudge = {
                     <div class="panel-inner">
                         <div class="panel-header" style="display:flex; align-items:center; gap:6px;">
                             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                            <span>Surety & Property Credentials</span>
+                            <span>Surety &amp; Financial Analysis</span>
                         </div>
-                        <div class="panel-body">
-                            <div class="info-item">
-                                <label>Surety Person Name & Relation</label>
-                                <div class="val">${c.surety.fullName} (${c.surety.relationToAccused})</div>
-                            </div>
-                            <div class="info-item">
-                                <label>Verified ITR & Income</label>
-                                <div class="val" style="font-family:var(--font-mono);">Average Annual ITR: ₹${avgItr.toLocaleString('en-IN')}</div>
-                            </div>
-                            <div class="info-item">
-                                <label>Cross-Court Guarantees Active</label>
-                                <div class="val">
-                                    ${c.surety.activeBailCount} Active Guarantees 
-                                    <span style="font-size:11px; font-weight:normal; color:#666;">(Limit: 2)</span>
+                        <div class="panel-body" style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto;">
+                            <!-- Risk Gauge -->
+                            <div style="background:rgba(255,255,255,0.04); border:1px solid var(--color-border); border-radius:8px; padding:14px; display:flex; align-items:center; gap:16px;">
+                                <div style="position:relative; width:80px; height:80px; flex-shrink:0;">
+                                    <svg viewBox="0 0 80 80" width="80" height="80">
+                                        <circle cx="40" cy="40" r="32" fill="none" stroke="var(--color-border)" stroke-width="8"/>
+                                        <circle cx="40" cy="40" r="32" fill="none" stroke="${riskColor}" stroke-width="8" stroke-dasharray="${Math.PI * 64 * riskScore / 100} ${Math.PI * 64}" stroke-linecap="round" transform="rotate(-90 40 40)"/>
+                                    </svg>
+                                    <div style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:800; color:${riskColor}; font-family:var(--font-mono);">${riskScore}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size:10px; font-weight:800; letter-spacing:1px; color:var(--color-gold); text-transform:uppercase; margin-bottom:4px;">AI Risk Score</div>
+                                    <div style="font-size:16px; font-weight:800; color:${riskColor};">${c.checks.risk.riskLevel} RISK</div>
+                                    <div style="font-size:11px; color:var(--color-text-muted); margin-top:2px;">Recommendation: <strong style="color:var(--color-text-main);">${c.checks.recommendation.label}</strong></div>
                                 </div>
                             </div>
-                            <div class="info-item">
-                                <label>Pledged Property Title (Webland API)</label>
-                                <div class="val" style="font-size:12.5px;">
-                                    Survey No: ${c.surety.surveyNumber || 'RS-104/12-C'}<br/>
-                                    Valuation: <strong style="font-family:var(--font-mono);">₹${parseFloat(c.surety.propertyValuation || 0).toLocaleString('en-IN')}</strong>
+
+                            <!-- Financial Summary -->
+                            <div class="info-item" style="padding-bottom:8px; border-bottom:1px solid var(--color-border);">
+                                <label style="font-weight:700; color:var(--color-gold-light); display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                                    <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:var(--color-gold-dim); color:#fff; font-size:10px; font-weight:bold;">A</span>
+                                    <span>Financial Capacity Assessment</span>
+                                </label>
+                                <div style="display:flex; flex-direction:column; gap:6px; margin-left:18px; font-size:11.5px;">
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:var(--color-text-muted);">Proposed Bail Amount:</span><strong style="font-family:var(--font-mono);">&#8377;${proposedBail.toLocaleString('en-IN')}</strong></div>
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:var(--color-text-muted);">Avg Bank Balance (6m):</span><strong style="font-family:var(--font-mono); color:${avgBalance >= proposedBail ? 'var(--color-success)' : 'var(--color-warning)'};">&#8377;${parseFloat(avgBalance).toLocaleString('en-IN')}</strong></div>
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:var(--color-text-muted);">CIBIL Score:</span><strong style="font-family:var(--font-mono); color:${c.accused.cibilScore > 700 ? 'var(--color-success)' : c.accused.cibilScore > 600 ? 'var(--color-warning)' : 'var(--color-danger)'};">${c.accused.cibilScore}</strong></div>
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:var(--color-text-muted);">Finance Status:</span><strong style="color:${c.checks.finance.status === 'ADEQUATE' ? 'var(--color-success)' : c.checks.finance.status === 'BORDERLINE' ? 'var(--color-warning)' : 'var(--color-danger)'};">${c.checks.finance.status}</strong></div>
                                 </div>
                             </div>
-                            <div class="info-item no-border">
-                                <label>Property Mutation Status</label>
-                                <div class="val">
-                                    ${c.surety.mutationStatus === 'COMPLETED' 
-                                        ? '<span class="badge badge-green">✓ ACTIVE BAIL ENCUMBRANCE MUTATED</span>' 
-                                        : '<span class="badge badge-yellow"> AWAITING ENCUMBRANCE MUTATION</span>'
-                                    }
+
+                            <!-- Surety Info -->
+                            <div class="info-item no-border" style="margin-bottom:0; padding-bottom:0;">
+                                <label style="font-weight:700; color:var(--color-gold-light); display:flex; align-items:center; gap:6px; margin-bottom:6px;">
+                                    <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; border-radius:50%; background:var(--color-gold-dim); color:#fff; font-size:10px; font-weight:bold;">B</span>
+                                    <span>Surety Verification</span>
+                                </label>
+                                <div style="display:flex; flex-direction:column; gap:5px; margin-left:18px; font-size:11.5px;">
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:var(--color-text-muted);">Name:</span><strong>${c.surety.fullName}</strong></div>
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:var(--color-text-muted);">Relation:</span><strong>${c.surety.relationToAccused}</strong></div>
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:var(--color-text-muted);">Surety Type:</span><strong>${c.surety.suretyType}</strong></div>
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:var(--color-text-muted);">Active Bail Load:</span><strong style="color:${c.surety.activeBailCount > 1 ? 'var(--color-warning)' : 'var(--color-success)'};">${c.surety.activeBailCount} bail(s)</strong></div>
+                                    ${c.surety.suretyType === 'PROPERTY' ? `
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:var(--color-text-muted);">Property Value:</span><strong style="font-family:var(--font-mono); color:var(--color-success);">&#8377;${parseFloat(c.surety.propertyValuation).toLocaleString('en-IN')}</strong></div>
+                                    <div style="display:flex; justify-content:space-between;"><span style="color:var(--color-text-muted);">Encumbrance:</span><strong style="color:${c.surety.encumbranceStatus === 'CLEAN' ? 'var(--color-success)' : 'var(--color-danger)'};">${c.surety.encumbranceStatus}</strong></div>` : ''}
                                 </div>
                             </div>
                         </div>
@@ -345,7 +399,7 @@ export const DashboardJudge = {
                             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="color:#f0d080 !important;"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect><line x1="9" y1="1" x2="9" y2="4"></line><line x1="15" y1="1" x2="15" y2="4"></line></svg>
                             <span>Quantex Smart Decision Advice</span>
                         </div>
-                        <div class="panel-body">
+                        <div class="panel-body" style="display:flex; flex-direction:column; gap:12px; max-height:400px; overflow-y:auto; padding:16px;">
                             <!-- Circular Conic Gauge -->
                             <div class="gauge-container" style="--gauge-color: ${riskColor}; --gauge-percent: ${riskScore}%;">
                                 <div class="gauge-circle">
@@ -404,227 +458,62 @@ export const DashboardJudge = {
                 </div>
             </div>
 
-            <!-- LEGAL ARGUMENTS PANEL -->
-            <div class="arguments-box">
-                <div class="arg-side arg-prosecution">
-                    <h4>Prosecution Objections</h4>
-                    <p style="font-style: italic;">"${c.arguments.prosecution || 'No objections filed by the State.'}"</p>
-                </div>
-                <div class="arg-side arg-defence">
-                    <h4>Defence Lawyer Arguments</h4>
-                    <p style="font-style: italic;">"${c.arguments.defence || 'No defence plea submitted.'}"</p>
-                </div>
-            </div>
-
-            <!-- QUANTEX SECURE GATEWAYS: EXTERNAL DATABASE INTEGRATIONS -->
-            <div class="card" style="margin-bottom: 20px; border-left: 4px solid var(--color-gold);">
-                <div class="card-header" style="background-color: var(--color-navy-light); padding: 14px 20px; display:flex; justify-content:space-between; align-items:center;">
-                    <h3 style="display:flex; align-items:center; gap:8px; margin:0; font-family: var(--font-headings); font-size: 16px; color: var(--color-gold-light);">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
-                        <span>Quantex Secure Gateways: Real-Time External Database Integrations</span>
-                    </h3>
-                    <span class="badge badge-green" style="font-size: 11px; padding: 4px 10px; font-family:var(--font-mono);">
-                        ● ALL GATEWAYS SECURED (SSL/AES-256)
-                    </span>
-                </div>
-                <div class="card-body" style="padding: 20px; background-color: var(--color-bg-dark);">
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px;">
-                        
-                        <!-- 1. Government Identity Databases -->
-                        <div style="background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <!-- API CONNECTOR NETWORK BLOCK (NEXT LINE) -->
+            <div style="margin-bottom: 20px;">
+                <div class="panel-inner">
+                    <div class="panel-header" style="display:flex; align-items:center; gap:6px;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                        <span>Government API Verification Network</span>
+                    </div>
+                    <div class="panel-body" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; max-height: none; overflow-y: visible; padding: 20px;">
+                        <!-- UIDAI Aadhaar API -->
+                        <div style="background-color: rgba(255,255,255,0.02); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
                                 <span style="font-weight: 700; color: var(--color-text-main); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
                                     <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-success); border-radius: 50%;"></span>
-                                    Government Identity Databases
+                                    UIDAI Aadhaar API
                                 </span>
-                                <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success); font-weight: 700;">CONNECTED</span>
+                                <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-success); font-weight: 800; background: rgba(74, 222, 128, 0.12); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(74, 222, 128, 0.25); margin-left: 14px;">CONNECTED</span>
                             </div>
-                            <div style="font-size: 12px; color: var(--color-text-muted); line-height: 1.4;">
-                                Checked: <strong>Aadhaar, PAN, Driving License, Passport, Election Commission</strong>
-                            </div>
+                            <div style="font-size: 12px; color: var(--color-text-muted);">Checked: <strong>Identity verification, biometric match, demographic cross-check</strong></div>
                             <div style="background: rgba(255,255,255,0.02); border-radius: 4px; padding: 8px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--color-border);">
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Aadhaar Sync:</span>
-                                    <span style="color: var(--color-success);">MATCHED (${c.accused.aadhaarNumber.substring(0, 4)}-XXXX-XXXX)</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>PAN Register:</span>
-                                    <span style="color: var(--color-success);">ACTIVE (${c.accused.panNumber})</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Passport List:</span>
-                                    <span>${c.accused.passportNumber ? c.accused.passportNumber : 'N/A'}</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 6px;">
-                                <span>SECURE HASH: SHA-256/UIDAI-API-3829</span>
-                                <span>LATENCY: 85ms</span>
+                                <div style="display: flex; justify-content: space-between;"><span>Aadhaar Match:</span><span style="color: var(--color-success); font-weight: 700;">&#10003; Identity Confirmed</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>PAN-Aadhaar Link:</span><span style="color: var(--color-success); font-weight: 700;">&#10003; Linked &amp; Active</span></div>
                             </div>
                         </div>
 
-                        <!-- 2. Financial Information Systems -->
-                        <div style="background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <!-- NCRB Criminal Records -->
+                        <div style="background-color: rgba(255,255,255,0.02); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
                                 <span style="font-weight: 700; color: var(--color-text-main); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
                                     <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-success); border-radius: 50%;"></span>
-                                    Financial Information Systems
+                                    NCRB Criminal Records
                                 </span>
-                                <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success); font-weight: 700;">CONNECTED</span>
+                                <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-success); font-weight: 800; background: rgba(74, 222, 128, 0.12); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(74, 222, 128, 0.25); margin-left: 14px;">CONNECTED</span>
                             </div>
-                            <div style="font-size: 12px; color: var(--color-text-muted); line-height: 1.4;">
-                                Checked: <strong>Income Tax, Banking Reg. Authority, CIBIL, RBI NPA records</strong>
-                            </div>
+                            <div style="font-size: 12px; color: var(--color-text-muted);">Checked: <strong>Criminal antecedents, FIR history, absconding records</strong></div>
                             <div style="background: rgba(255,255,255,0.02); border-radius: 4px; padding: 8px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--color-border);">
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>CIBIL Credit Score:</span>
-                                    <span style="color: ${c.accused.cibilScore >= 700 ? 'var(--color-success)' : c.accused.cibilScore >= 600 ? 'var(--color-warning)' : 'var(--color-danger)'}; font-weight: 700;">${c.accused.cibilScore}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>ITR File Sync:</span>
-                                    <span style="color: var(--color-success);">AVERAGE ₹${c.checks.finance.metrics.avgItr.toLocaleString('en-IN')}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>RBI Default Check:</span>
-                                    <span style="color: var(--color-success);">CLEAN (No NPA Flags)</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 6px;">
-                                <span>SECURE HASH: SHA-256/CBDT-RBI-9043</span>
-                                <span>LATENCY: 142ms</span>
+                                <div style="display: flex; justify-content: space-between;"><span>Prior FIRs (NCRB):</span><span style="color:${c.accused.ncrbCount > 0 ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight: 700;">${c.accused.ncrbCount > 0 ? `&#9888; ${c.accused.ncrbCount} Found` : '&#10003; Clean'}</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Absconding Flag:</span><span style="color:${c.accused.abscondingCount > 0 ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight: 700;">${c.accused.abscondingCount > 0 ? `&#9888; ${c.accused.abscondingCount} Record(s)` : '&#10003; None'}</span></div>
                             </div>
                         </div>
 
-                        <!-- 3. Judicial Information Systems -->
-                        <div style="background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <!-- Immigration & Border Control -->
+                        <div style="background-color: rgba(255,255,255,0.02); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
+                            <div style="display: flex; flex-direction: column; gap: 4px; align-items: flex-start;">
                                 <span style="font-weight: 700; color: var(--color-text-main); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
                                     <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-success); border-radius: 50%;"></span>
-                                    Judicial Information Systems
+                                    Immigration &amp; Border Control
                                 </span>
-                                <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success); font-weight: 700;">CONNECTED</span>
-                            </div>
-                            <div style="font-size: 12px; color: var(--color-text-muted); line-height: 1.4;">
-                                Checked: <strong>State eCourts databases, Bar Council records, Police FIR records</strong>
+                                <span style="font-family: var(--font-mono); font-size: 9px; color: var(--color-success); font-weight: 800; background: rgba(74, 222, 128, 0.12); padding: 2px 7px; border-radius: 4px; border: 1px solid rgba(74, 222, 128, 0.25); margin-left: 14px;">CONNECTED</span>
                             </div>
                             <div style="background: rgba(255,255,255,0.02); border-radius: 4px; padding: 8px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--color-border);">
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>NCRB Crimes Match:</span>
-                                    <span style="color: ${c.accused.ncrbCount > 0 ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight: 700;">${c.accused.ncrbCount} Case(s) Registered</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>FIR Database:</span>
-                                    <span>${c.firNumber} MATCH</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Bail History:</span>
-                                    <span>${c.accused.prevBailsGranted} Granted, ${c.accused.abscondingCount} Abscond Defaults</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 6px;">
-                                <span>SECURE HASH: SHA-256/ECOURTS-POL-8492</span>
-                                <span>LATENCY: 115ms</span>
+                                <div style="display: flex; justify-content: space-between;"><span>LOC Status:</span><span style="color: ${c.accused.travelRestricted ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight: 700;">${c.accused.travelRestricted ? '&#9888; LOC ACTIVE' : '&#10003; CLEAR / NO LOC'}</span></div>
+                                <div style="display: flex; justify-content: space-between;"><span>Passport Watch:</span><span style="color: ${c.accused.travelRestricted ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight:700;">${c.accused.travelRestricted ? 'FLIGHT RISK' : 'CLEAN / VERIFIED'}</span></div>
                             </div>
                         </div>
-
-                        <!-- 4. Revenue Department Systems -->
-                        <div style="background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-weight: 700; color: var(--color-text-main); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
-                                    <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-success); border-radius: 50%;"></span>
-                                    Revenue Department Systems
-                                </span>
-                                <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success); font-weight: 700;">CONNECTED</span>
-                            </div>
-                            <div style="font-size: 12px; color: var(--color-text-muted); line-height: 1.4;">
-                                Checked: <strong>Land records (Webland API), property mutation databases</strong>
-                            </div>
-                            <div style="background: rgba(255,255,255,0.02); border-radius: 4px; padding: 8px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--color-border);">
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Pledged Land:</span>
-                                    <span style="font-weight:700;">${c.surety.suretyType === 'PROPERTY' ? 'YES (PLEDGED)' : 'NO (INDIVIDUAL BOND)'}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Revenue Record:</span>
-                                    <span>${c.surety.suretyType === 'PROPERTY' ? c.surety.propertyRevenueRecord : 'N/A'}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Title Ownership ID:</span>
-                                    <span>${c.surety.suretyType === 'PROPERTY' ? c.surety.propertyOwnershipDoc.replace('Title Deed ID: ', '') : 'N/A'}</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 6px;">
-                                <span>SECURE HASH: SHA-256/REV-MANDAL-3849</span>
-                                <span>LATENCY: 160ms</span>
-                            </div>
-                        </div>
-
-                        <!-- 5. Biometric Databases -->
-                        <div style="background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px; grid-column: span 1;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-weight: 700; color: var(--color-text-main); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
-                                    <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-success); border-radius: 50%;"></span>
-                                    Biometric Databases
-                                </span>
-                                <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success); font-weight: 700;">CONNECTED</span>
-                            </div>
-                            <div style="font-size: 12px; color: var(--color-text-muted); line-height: 1.4;">
-                                Checked: <strong>Fingerprint scanner, retina/iris scan repositories</strong>
-                            </div>
-                            <div style="background: rgba(255,255,255,0.02); border-radius: 4px; padding: 8px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--color-border);">
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Accused Fingerprint:</span>
-                                    <span style="color: var(--color-success); font-weight: 700;">✓ Aadhaar Match (100%)</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Accused Retina Scan:</span>
-                                    <span style="color: var(--color-success); font-weight: 700;">✓ Aadhaar Match (100%)</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Surety Biometrics:</span>
-                                    <span style="color: var(--color-success); font-weight: 700;">✓ Verified at Counter</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 6px;">
-                                <span>SECURE HASH: SHA-256/BIO-MATCH-1204</span>
-                                <span>LATENCY: 90ms</span>
-                            </div>
-                        </div>
-
-                        <!-- 6. Immigration & Border Control Systems -->
-                        <div style="background-color: var(--color-card-dark); border: 1px solid var(--color-border); border-radius: 8px; padding: 14px; display: flex; flex-direction: column; gap: 8px; grid-column: span 1;">
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <span style="font-weight: 700; color: var(--color-text-main); font-size: 13.5px; display: flex; align-items: center; gap: 6px;">
-                                    <span style="display: inline-block; width: 8px; height: 8px; background-color: var(--color-success); border-radius: 50%;"></span>
-                                    Immigration & Border Control Systems
-                                </span>
-                                <span style="font-family: var(--font-mono); font-size: 10px; color: var(--color-success); font-weight: 700;">CONNECTED</span>
-                            </div>
-                            <div style="font-size: 12px; color: var(--color-text-muted); line-height: 1.4;">
-                                Checked: <strong>Bureau of Immigration (BoI) API, MEA Passport Seva Registry, LOC lists</strong>
-                            </div>
-                            <div style="background: rgba(255,255,255,0.02); border-radius: 4px; padding: 8px; font-family: var(--font-mono); font-size: 11px; display: flex; flex-direction: column; gap: 4px; border: 1px solid var(--color-border);">
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Travel History Exit/Entry:</span>
-                                    <span style="color: var(--color-success); font-weight: 700;">✓ Verified (2 trips in 2025)</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Lookout Circular (LOC):</span>
-                                    <span>${c.accused.travelRestricted ? '<span style="color: var(--color-danger); font-weight:700;">⚠ LOC ACTIVE</span>' : '<span style="color: var(--color-success); font-weight:700;">✓ CLEAR / NO ACTIVE LOC</span>'}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>Passport Active Watch:</span>
-                                    <span style="color: ${c.accused.travelRestricted ? 'var(--color-danger)' : 'var(--color-success)'}; font-weight:700;">${c.accused.travelRestricted ? 'FLIGHT RISK RECORDED' : 'CLEAN / VERIFIED'}</span>
-                                </div>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; font-family: var(--font-mono); color: var(--color-text-muted); margin-top: 4px; border-top: 1px dashed var(--color-border); padding-top: 6px;">
-                                <span>SECURE HASH: SHA-256/BOI-LOC-7492</span>
-                                <span>LATENCY: 110ms</span>
-                            </div>
-                        </div>
-
                     </div>
                 </div>
-            </div>
 
             <!-- COMPARABLE PAST CASES REFERENCE -->
             <div class="card" style="margin-bottom: 20px;">
@@ -633,7 +522,7 @@ export const DashboardJudge = {
                         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
                         <span>Comparable Judicial Past Precedents (AP High Court / Supreme Court Reference)</span>
                     </h3>
-                    <span>▼ Expand Reference Registry</span>
+                    <span>&#9660; Expand Reference Registry</span>
                 </div>
                 <div class="card-body" id="past-cases-panel" style="display:none;">
                     <div class="comparable-cases-list">
@@ -643,7 +532,7 @@ export const DashboardJudge = {
                                 <span style="color:var(--color-success);">GRANTED WITH WEEKLY POLICE REPORTING</span>
                             </div>
                             <div class="comp-case-body">
-                                <strong>Held:</strong> The accused had recovery completed, steady community roots, and verified individual surety. Granted bail on a ₹40,000 bond subject to surrendering travel certificates and biometric counter verification.
+                                <strong>Held:</strong> The accused had recovery completed, steady community roots, and verified individual surety. Granted bail on a &#8377;40,000 bond subject to surrendering travel certificates and biometric counter verification.
                             </div>
                         </div>
                         <div class="comp-case-item">
@@ -689,7 +578,7 @@ export const DashboardJudge = {
                 </div>
                 
                 <div class="form-group" style="margin-top:10px;">
-                    <label style="color:var(--color-text-muted); font-size:12px; margin-bottom:8px; display:block;">Custom Reporting Conditions & Judicial Remarks</label>
+                    <label style="color:var(--color-text-muted); font-size:12px; margin-bottom:8px; display:block;">Custom Reporting Conditions &amp; Judicial Remarks</label>
                     <textarea class="form-input" id="judge-decision-remarks" rows="3" style="border-color:var(--color-gold); resize:vertical;" placeholder="Write custom conditions here. Example: Accused to appear at Rajamundry Urban Police Station every Monday. Passport to be deposited inside Court registry locker.">${c.judgeRemarks || ''}</textarea>
                 </div>
                 
@@ -706,7 +595,7 @@ export const DashboardJudge = {
                         <p id="judge-esign-reminder" style="font-size:11px; color:${c.digitalSignature ? 'var(--color-success)' : 'var(--color-warning)'}; font-weight:700; margin-top:6px; display:flex; align-items:center; gap:4px;">
                             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle; color:var(--color-danger); margin-right:2px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                             <span>${c.digitalSignature 
-                                ? state.translate('✓ Digital e-Sign affixed. Ready for submission.', '✓ डिजिटल ई-हस्ताक्षर लगाया गया। प्रस्तुत करने के लिए तैयार।') 
+                                ? state.translate('&#10003; Digital e-Sign affixed. Ready for submission.', '&#10003; डिजिटल ई-हस्ताक्षर लगाया गया। प्रस्तुत करने के लिए तैयार।') 
                                 : state.translate('Reminder: You must click the signature box to e-Sign before submitting the verdict.', 'अनुस्मारक: निर्णय प्रस्तुत करने से पहले आपको ई-हस्ताक्षर के लिए हस्ताक्षर बॉक्स पर क्लिक करना होगा।')
                             }</span>
                         </p>
@@ -729,10 +618,10 @@ export const DashboardJudge = {
         toggleBtn.addEventListener('click', () => {
             if (pastCasesPanel.style.display === 'none') {
                 pastCasesPanel.style.display = 'block';
-                toggleBtn.querySelector('span').innerText = '▲ Collapse Reference Registry';
+                toggleBtn.querySelector('span').innerText = '&#9650; Collapse Reference Registry';
             } else {
                 pastCasesPanel.style.display = 'none';
-                toggleBtn.querySelector('span').innerText = '▼ Expand Reference Registry';
+                toggleBtn.querySelector('span').innerText = '&#9660; Expand Reference Registry';
             }
         });
 
@@ -772,7 +661,7 @@ export const DashboardJudge = {
             esignReminder.style.color = 'var(--color-success)';
             esignReminder.innerHTML = `
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle; color:var(--color-success); margin-right:4px;"><polyline points="20 6 9 17 4 12"/></svg>
-                <span>${state.translate('✓ Digital e-Sign affixed. Ready for submission.', '✓ डिजिटल ई-हस्ताक्षर लगाया गया। प्रस्तुत करने के लिए तैयार।')}</span>
+                <span>${state.translate('&#10003; Digital e-Sign affixed. Ready for submission.', '&#10003; डिजिटल ई-हस्ताक्षर लगाया गया। प्रस्तुत करने के लिए तैयार।')}</span>
             `;
 
             submitBtn.disabled = false;
@@ -782,8 +671,8 @@ export const DashboardJudge = {
 
             // Custom secure reminder alert
             alert(state.translate(
-                "Encrypted Digital e-Sign affixed successfully!\n\n⚠️ IMPORTANT REMINDER: The verdict is NOT submitted yet. You must now click the 'SUBMIT FINAL COURT VERDICT' button below to finalize and transmit the judicial decree.",
-                "एन्क्रिप्टेड डिजिटल ई-हस्ताक्षर सफलतापूर्वक लगाया गया!\n\n⚠️ महत्वपूर्ण अनुस्मारक: निर्णय अभी तक प्रस्तुत नहीं किया गया है। न्यायिक डिक्री को अंतिम रूप देने और प्रेषित करने के लिए अब आपको नीचे दिए गए 'न्यायालय का अंतिम निर्णय प्रस्तुत करें' बटन पर क्लिक करना होगा।"
+                "Encrypted Digital e-Sign affixed successfully!\n\n\u26A0\uFE0F IMPORTANT REMINDER: The verdict is NOT submitted yet. You must now click the 'SUBMIT FINAL COURT VERDICT' button below to finalize and transmit the judicial decree.",
+                "एन्क्रिप्टेड डिजिटल ई-हस्ताक्षर सफलतापूर्वक लगाया गया!\n\n\u26A0\uFE0F महत्वपूर्ण अनुस्मारक: निर्णय अभी तक प्रस्तुत नहीं किया गया है। न्यायिक डिक्री को अंतिम रूप देने और प्रेषित करने के लिए अब आपको नीचे दिए गए 'न्यायालय का अंतिम निर्णय प्रस्तुत करें' बटन पर क्लिक करना होगा।"
             ));
         });
 
@@ -846,13 +735,13 @@ export const DashboardJudge = {
 
                         <h4 style="font-size:12.5px; font-weight:700; color:var(--color-gold-light); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px;">Executed Instant Directives:</h4>
                         <div style="display:flex; flex-direction:column; gap:10px; font-size:12px; background:rgba(255,255,255,0.02); padding:12px; border-radius:6px; border:1px solid var(--color-border);">
-                            <div style="display:flex; align-items:center; gap:8px;"><span style="color:var(--color-success); font-weight:bold;">✓</span><span style="color:var(--color-text-main);"><strong>Rajamundry Central Jail API:</strong> secure remand release dispatch compiled & transmitted.</span></div>
-                            <div style="display:flex; align-items:center; gap:8px;"><span style="color:var(--color-success); font-weight:bold;">✓</span><span style="color:var(--color-text-main);"><strong>AP Police Crimes Network:</strong> local station bail reporting schedule created automatically.</span></div>
-                            <div style="display:flex; align-items:center; gap:8px;"><span style="color:var(--color-success); font-weight:bold;">✓</span><span style="color:var(--color-text-main);"><strong>Webland Revenue Mandal Registry:</strong> surety land encumbrance mutated instantly and locked.</span></div>
+                            <div style="display:flex; align-items:center; gap:8px;"><span style="color:var(--color-success); font-weight:bold;">&#10003;</span><span style="color:var(--color-text-main);"><strong>Rajamundry Central Jail API:</strong> secure remand release dispatch compiled &amp; transmitted.</span></div>
+                            <div style="display:flex; align-items:center; gap:8px;"><span style="color:var(--color-success); font-weight:bold;">&#10003;</span><span style="color:var(--color-text-main);"><strong>AP Police Crimes Network:</strong> local station bail reporting schedule created automatically.</span></div>
+                            <div style="display:flex; align-items:center; gap:8px;"><span style="color:var(--color-success); font-weight:bold;">&#10003;</span><span style="color:var(--color-text-main);"><strong>Webland Revenue Mandal Registry:</strong> surety land encumbrance mutated instantly and locked.</span></div>
                         </div>
 
                         <button id="btn-close-verdict-modal" class="btn btn-success" style="width:100%; margin-top:20px; padding:12px; font-size:14px; font-weight:700; color:#ffffff; cursor:pointer;">
-                            ${state.translate('Close & Return to Hearings Board', 'बंद करें और सुनवाई बोर्ड पर वापस जाएं')}
+                            ${state.translate('Close &amp; Return to Hearings Board', 'बंद करें और सुनवाई बोर्ड पर वापस जाएं')}
                         </button>
                     </div>
                 </div>

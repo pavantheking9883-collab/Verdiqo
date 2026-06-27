@@ -6,3 +6,7 @@ verdiqo_db
 .DS_Store
 Thumbs.db
 desktop.ini
+
+verdiqo_backend/node_modules/
+verdiqo_flutter/.dart_tool/
+verdiqo_flutter/build/

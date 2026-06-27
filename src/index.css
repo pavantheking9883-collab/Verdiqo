@@ -17,9 +17,9 @@
   --color-navy: #08111e; /* Constant deep navy background */
   --color-navy-sec: #0c1a30; /* Constant deep corporate navy */
   
-  --color-gold: #c9a84c;
-  --color-gold-light: #f0d080;
-  --color-gold-dim: #a68428;
+  --color-gold: #3b82f6;
+  --color-gold-light: #60a5fa;
+  --color-gold-dim: #1d4ed8;
   
   --color-text-main: #f8fafc; /* Premium soft off-white to reduce eye strain */
   --color-text-muted: #94a3b8; /* Crisp medium slate */
@@ -58,9 +58,9 @@ body.light-theme {
   
   --color-text-main: #0f172a; /* High contrast deep slate navy */
   --color-text-muted: #1e293b; /* Dark slate gray descriptive body (extreme high contrast against white) */
-  --color-gold: #92711d; /* Elegant deep bronze-gold for Light Mode accessibility */
-  --color-gold-light: #7c5a03; /* Rich deep gold highlight */
-  --color-gold-dim: #856404; /* High contrast bronze/gold */
+  --color-gold: #1d4ed8; /* Elegant deep blue for Light Mode accessibility */
+  --color-gold-light: #1e40af; /* Rich deep blue highlight */
+  --color-gold-dim: #172554; /* High contrast dark blue */
   
   --color-blue-num: #0369a1; /* Deep professional blue statistics numbers */
   
@@ -486,7 +486,14 @@ body.light-theme .charge-red {
   align-items: center;
   justify-content: center;
   padding: 40px 20px;
-  background-color: var(--color-bg-dark);
+  background-image: linear-gradient(rgba(5, 12, 22, 0.75), rgba(5, 12, 22, 0.75)), url('/supreme_court.png');
+  background-size: cover;
+  background-position: center;
+  min-height: 100vh;
+}
+
+body.light-theme .login-container {
+  background-image: linear-gradient(rgba(248, 246, 240, 0.15), rgba(248, 246, 240, 0.15)), url('/supreme_court.png');
 }
 
 .login-card {
@@ -619,7 +626,7 @@ body.light-theme textarea:focus {
   width: 100%;
   padding: 12px;
   background-color: var(--color-gold);
-  color: var(--color-header-dark);
+  color: #ffffff;
   border: none;
   border-radius: 4px;
   font-size: 15px;
@@ -2002,6 +2009,9 @@ body.light-theme .legal-page-sheet .legal-watermark {
   .judge-mobile-tabs {
     display: flex !important;
   }
+  .judge-mobile-back-row {
+    display: block !important;
+  }
   .judge-container.listings .hearing-list-sidebar {
     display: block !important;
   }
@@ -2339,11 +2349,11 @@ body.light-theme .stat-card:hover {
 .stat-icon.red::before { border-color: rgba(248, 113, 113, 0.3) !important; }
 
 .stat-icon.gold {
-  background: radial-gradient(circle, rgba(251, 191, 36, 0.2) 0%, rgba(251, 191, 36, 0.04) 100%) !important;
-  border: 1px solid #fbbf24 !important;
-  color: #fbbf24 !important;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.04) 100%) !important;
+  border: 1px solid #3b82f6 !important;
+  color: #3b82f6 !important;
 }
-.stat-icon.gold::before { border-color: rgba(251, 191, 36, 0.3) !important; }
+.stat-icon.gold::before { border-color: rgba(59, 130, 246, 0.3) !important; }
 
 /* Light Theme adaptations for stat icons to maintain prestige & readability */
 body.light-theme .stat-icon.navy {
@@ -2368,8 +2378,462 @@ body.light-theme .stat-icon.red {
 body.light-theme .stat-icon.red::before { border-color: rgba(153, 27, 27, 0.2) !important; }
 
 body.light-theme .stat-icon.gold {
-  background: radial-gradient(circle, rgba(133, 77, 14, 0.12) 0%, rgba(133, 77, 14, 0.02) 100%) !important;
-  border-color: #854d0e !important;
-  color: #854d0e !important;
+  background: radial-gradient(circle, rgba(29, 78, 216, 0.12) 0%, rgba(29, 78, 216, 0.02) 100%) !important;
+  border-color: #1d4ed8 !important;
+  color: #1d4ed8 !important;
 }
-body.light-theme .stat-icon.gold::before { border-color: rgba(133, 77, 14, 0.2) !important; }
+body.light-theme .stat-icon.gold::before { border-color: rgba(29, 78, 216, 0.2) !important; }
+
+/* ==========================================================================
+   CIVIL LITIGATION INTEGRATION PORTAL STYLES & HOLOGRAPHIC ANIMATIONS
+   ========================================================================== */
+
+/* 1. Module Selector / Gateway Selection Styles */
+.module-selection-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: var(--color-bg-dark);
+  padding: 40px 20px;
+  font-family: var(--font-body);
+}
+
+.module-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.module-header h1 {
+  font-family: var(--font-brand);
+  font-size: 40px;
+  color: var(--color-text-main);
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.module-header p {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.module-cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  max-width: 960px;
+  width: 100%;
+}
+
+.module-card {
+  background-color: var(--color-card-dark);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  padding: 40px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  overflow: hidden;
+}
+
+.module-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.module-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--color-gold);
+  box-shadow: 0 12px 30px rgba(59, 130, 246, 0.15);
+}
+
+.module-card:hover::before {
+  opacity: 1;
+}
+
+.module-card-icon {
+  font-size: 48px;
+  margin-bottom: 24px;
+}
+
+.module-card h2 {
+  font-family: var(--font-brand);
+  font-size: 24px;
+  color: var(--color-text-main);
+  margin-bottom: 16px;
+}
+
+.module-card p {
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 30px;
+}
+
+.module-card .btn {
+  margin-top: auto;
+}
+
+/* 2. Civil Panel Grid & Tab Controls */
+.civil-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 24px;
+  padding: 24px;
+  height: calc(100vh - 90px);
+  box-sizing: border-box;
+}
+
+@media (max-width: 1024px) {
+  .civil-grid {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+}
+
+.civil-panel {
+  background-color: var(--color-card-dark);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.civil-panel-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-border);
+  background-color: var(--color-table-header);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.civil-panel-header h2 {
+  font-family: var(--font-brand);
+  font-size: 18px;
+  margin: 0;
+  color: var(--color-text-main);
+}
+
+.civil-panel-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.tab-nav-buttons {
+  display: flex;
+  background-color: var(--color-bg-dark);
+  padding: 4px;
+  border-radius: var(--border-radius-md);
+  margin-bottom: 24px;
+  gap: 4px;
+  overflow-x: auto;
+}
+
+.tab-nav-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  padding: 10px 16px;
+  font-size: 13px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  border-radius: var(--border-radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.tab-nav-btn.active {
+  background-color: var(--color-card-dark);
+  color: var(--color-gold-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 3. Radial Compliance Gauge */
+.compliance-radial-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 20px 0;
+  position: relative;
+}
+
+.compliance-svg {
+  width: 140px;
+  height: 140px;
+  transform: rotate(-90deg);
+}
+
+.compliance-bg-ring {
+  fill: none;
+  stroke: var(--color-border);
+  stroke-width: 12;
+}
+
+.compliance-fill-ring {
+  fill: none;
+  stroke: var(--color-success);
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease;
+}
+
+.compliance-text {
+  position: absolute;
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--color-success);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.compliance-text span {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* 4. Fullscreen Biometric Attendance Gate Overlay */
+.biometrics-fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(5, 12, 22, 0.98);
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  color: var(--color-blue-num);
+}
+
+.gate-hud-layout {
+  display: flex;
+  align-items: center;
+  gap: 80px;
+  max-width: 1200px;
+  width: 100%;
+  padding: 0 40px;
+}
+
+@media (max-width: 900px) {
+  .gate-hud-layout {
+    flex-direction: column;
+    gap: 40px;
+  }
+}
+
+.retina-scanner-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.retina-circle-border {
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  border: 2px dashed rgba(56, 189, 248, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  animation: rotateClockwise 30s linear infinite;
+}
+
+.retina-scanner-laser {
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  background: var(--color-blue-num);
+  box-shadow: 0 0 15px var(--color-blue-num);
+  top: 50%;
+  left: 0;
+  animation: scanUpDown 3s ease-in-out infinite;
+}
+
+.retina-pupil {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.4) 0%, rgba(8, 17, 30, 0.8) 70%, #050c16 100%);
+  border: 3px solid var(--color-blue-num);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulseScanner 2s infinite;
+}
+
+.retina-lens {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: #050c16;
+  border: 5px solid rgba(56, 189, 248, 0.8);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+}
+
+.ten-fingerprints-panel {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  flex: 1;
+}
+
+.finger-scan-capsule {
+  background-color: rgba(18, 28, 42, 0.6);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.finger-scan-capsule:hover {
+  border-color: var(--color-blue-num);
+  background-color: rgba(56, 189, 248, 0.05);
+}
+
+.finger-scan-capsule.scanned {
+  border-color: var(--color-success);
+  background-color: rgba(74, 222, 128, 0.05);
+}
+
+.finger-scan-capsule.scanned svg {
+  stroke: var(--color-success);
+  filter: drop-shadow(0 0 8px var(--color-success));
+}
+
+.finger-scan-capsule.scanning {
+  border-color: var(--color-warning);
+  background-color: rgba(251, 191, 36, 0.05);
+  animation: pulseBorder 1s infinite alternate;
+}
+
+.finger-scan-capsule.scanning svg {
+  stroke: var(--color-warning);
+}
+
+.finger-label {
+  font-size: 10px;
+  color: var(--color-text-muted);
+  margin-top: 10px;
+  text-transform: uppercase;
+}
+
+.gate-hud-title {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.gate-hud-title h2 {
+  font-size: 28px;
+  letter-spacing: 3px;
+  margin-bottom: 10px;
+  color: var(--color-text-main);
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+/* Animations */
+@keyframes rotateClockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes scanUpDown {
+  0% { top: 0%; }
+  50% { top: 100%; }
+  100% { top: 0%; }
+}
+
+@keyframes pulseScanner {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes pulseBorder {
+  from { border-color: var(--color-border); }
+  to { border-color: var(--color-warning); }
+}
+
+.dossier-scrollable {
+  max-height: 480px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   GLOBAL BADGE UTILITY CLASSES
+   Used by DashboardAdmin civil docket & fraud sentinel
+   ═══════════════════════════════════════════════════════ */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.badge-red {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+.badge-yellow {
+  background: rgba(234, 179, 8, 0.13);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.35);
+}
+.badge-green {
+  background: rgba(34, 197, 94, 0.13);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.35);
+}
+.badge-blue {
+  background: rgba(37, 99, 235, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(37, 99, 235, 0.35);
+}
+.badge-grey {
+  background: rgba(156, 163, 175, 0.13);
+  color: #9ca3af;
+  border: 1px solid rgba(156, 163, 175, 0.3);
+}
+
+/* Light-theme overrides for badges */
+body.light-theme .badge-red    { background: rgba(239,68,68,0.08);   color: #dc2626; border-color: rgba(239,68,68,0.25); }
+body.light-theme .badge-yellow { background: rgba(202,138,4,0.08);   color: #b45309; border-color: rgba(202,138,4,0.25); }
+body.light-theme .badge-green  { background: rgba(22,163,74,0.08);   color: #16a34a; border-color: rgba(22,163,74,0.25); }
+body.light-theme .badge-blue   { background: rgba(37,99,235,0.08);   color: #1d4ed8; border-color: rgba(37,99,235,0.25); }
+body.light-theme .badge-grey   { background: rgba(107,114,128,0.08); color: #6b7280; border-color: rgba(107,114,128,0.2); }

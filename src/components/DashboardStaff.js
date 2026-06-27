@@ -8,14 +8,14 @@ import { VerificationEngine } from '../utils/verificationEngine.js';
 
 export const DashboardStaff = {
     render(container, state, onUpdate) {
-        let activeTab = state.staffActiveTab || 'status'; // Replicating mockup: default to status board tab
+        let activeTab = state.staffActiveTab || 'status';
         
-        container.innerHTML = `
-            <div id="staff-tab-content"></div>
-        `;
+        container.innerHTML = `<div id="staff-tab-content"></div>`;
 
         if (activeTab === 'register') {
             this.renderRegisterForm(container.querySelector('#staff-tab-content'), state, onUpdate);
+        } else if (activeTab === 'civil_register') {
+            this.renderCivilRegisterForm(container.querySelector('#staff-tab-content'), state, onUpdate);
         } else {
             this.renderStatusBoard(container.querySelector('#staff-tab-content'), state, onUpdate);
         }
@@ -78,13 +78,13 @@ export const DashboardStaff = {
                             <label>Supporting Documents Submitted</label>
                             <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 8px;">
                                 <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; text-transform: none; font-weight: normal; cursor: pointer;">
-                                    <input type="checkbox" id="doc-character" checked style="width: 16px; height: 16px; margin: 0;"> Character Certificates (चरित्र प्रमाण पत्र)
+                                    <input type="checkbox" id="doc-character" checked style="width: 16px; height: 16px; margin: 0;"> Character Certificates
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; text-transform: none; font-weight: normal; cursor: pointer;">
-                                    <input type="checkbox" id="doc-employment" checked style="width: 16px; height: 16px; margin: 0;"> Employment Letters (रोजगार पत्र)
+                                    <input type="checkbox" id="doc-employment" checked style="width: 16px; height: 16px; margin: 0;"> Employment Letters
                                 </label>
                                 <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; text-transform: none; font-weight: normal; cursor: pointer;">
-                                    <input type="checkbox" id="doc-community" checked style="width: 16px; height: 16px; margin: 0;"> Community Ties Evidence (सामुदायिक संबंध साक्ष्य)
+                                    <input type="checkbox" id="doc-community" checked style="width: 16px; height: 16px; margin: 0;"> Community Ties Evidence
                                 </label>
                             </div>
                         </div>
@@ -383,7 +383,7 @@ export const DashboardStaff = {
                         
                         <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
                             <button type="button" class="btn btn-secondary" id="btn-reset-form">Reset Form</button>
-                            <button type="submit" class="btn btn-success" id="btn-submit-app">✓ Submit & Compile System Checks</button>
+                            <button type="submit" class="btn btn-success" id="btn-submit-app">&#10003; Submit &amp; Compile System Checks</button>
                         </div>
                     </div>
                 </div>
@@ -684,6 +684,279 @@ export const DashboardStaff = {
         });
     },
 
+    renderCivilRegisterForm(tabContent, state, onUpdate) {
+        const todayDate = new Date().toISOString().split('T')[0];
+        const civilCaseNo = `CL-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+        tabContent.innerHTML = `
+            <div class="dashboard-header-block" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div class="dashboard-title">
+                    <h2 style="display:flex; align-items:center; gap:8px;">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" style="color:#2563eb;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <span>New Civil Plaint Registration</span>
+                    </h2>
+                    <p>File a new Civil Plaint case in the district court ledger</p>
+                </div>
+                <button class="btn btn-secondary" id="btn-back-civil">&#8592; Back to Board</button>
+            </div>
+
+            <form id="civil-suit-form">
+                <!-- Section 1: Case Details -->
+                <div class="card" style="border-top: 3px solid #2563eb; margin-bottom:20px;">
+                    <div class="card-header">
+                        <h3 style="display:flex; align-items:center; gap:6px;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:#2563eb;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                            <span>1. Plaint &amp; Case Details</span>
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
+                            <div class="form-group">
+                                <label>Case Number</label>
+                                <input type="text" id="civil-case-no" value="${civilCaseNo}" readonly style="background:rgba(30,58,138,0.08); font-family:var(--font-mono); font-weight:700;">
+                            </div>
+                            <div class="form-group">
+                                <label>Plaint Type *</label>
+                                <select id="civil-suit-type" required>
+                                    <option value="">-- Select Type --</option>
+                                    <option>Property Dispute</option>
+                                    <option>Money Recovery Suit</option>
+                                    <option>Matrimonial (Divorce)</option>
+                                    <option>Contract Breach</option>
+                                    <option>Injunction Suit</option>
+                                    <option>Partition Suit</option>
+                                    <option>Specific Performance</option>
+                                    <option>Defamation</option>
+                                    <option>Tort / Negligence</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Filing Date</label>
+                                <input type="date" id="civil-filing-date" value="${todayDate}">
+                            </div>
+                            <div class="form-group">
+                                <label>Presiding Judge *</label>
+                                <input type="text" id="civil-judge" placeholder="Hon'ble Judge Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Court Number</label>
+                                <input type="text" id="civil-court" placeholder="e.g. Civil Court Room 1" value="Civil Court Room 1, Rajamundry">
+                            </div>
+                            <div class="form-group">
+                                <label>Hearing Date</label>
+                                <input type="date" id="civil-hearing-date">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:12px;">
+                            <label>Brief Description of Suit *</label>
+                            <textarea id="civil-description" rows="3" placeholder="Describe the civil dispute in brief..." required style="resize:vertical;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Relief Sought</label>
+                            <input type="text" id="civil-relief" placeholder="e.g. Injunction, Declaration, Recovery of Rs. 5,00,000">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Plaintiff Details -->
+                <div class="card" style="border-top: 3px solid #2563eb; margin-bottom:20px;">
+                    <div class="card-header">
+                        <h3 style="display:flex; align-items:center; gap:6px;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:#2563eb;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <span>2. Plaintiff Details</span>
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
+                            <div class="form-group">
+                                <label>Plaintiff Full Name *</label>
+                                <input type="text" id="plaintiff-name" placeholder="Full legal name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Father / Husband Name</label>
+                                <input type="text" id="plaintiff-father" placeholder="Father's / Husband's name">
+                            </div>
+                            <div class="form-group">
+                                <label>Age</label>
+                                <input type="number" id="plaintiff-age" placeholder="Age" min="1" max="120">
+                            </div>
+                            <div class="form-group">
+                                <label>Mobile Number</label>
+                                <input type="tel" id="plaintiff-mobile" placeholder="10-digit mobile">
+                            </div>
+                            <div class="form-group">
+                                <label>Aadhaar Number</label>
+                                <input type="text" id="plaintiff-aadhaar" placeholder="XXXX-XXXX-XXXX" maxlength="14">
+                            </div>
+                            <div class="form-group">
+                                <label>Advocate Name</label>
+                                <input type="text" id="plaintiff-advocate" placeholder="Plaintiff's advocate">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Address</label>
+                            <textarea id="plaintiff-address" rows="2" placeholder="Complete residential address"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Defendant Details -->
+                <div class="card" style="border-top: 3px solid var(--color-danger); margin-bottom:20px;">
+                    <div class="card-header">
+                        <h3 style="display:flex; align-items:center; gap:6px;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-danger);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <span>3. Defendant Details</span>
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
+                            <div class="form-group">
+                                <label>Defendant Full Name *</label>
+                                <input type="text" id="defendant-name" placeholder="Full legal name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Father / Husband Name</label>
+                                <input type="text" id="defendant-father" placeholder="Father's / Husband's name">
+                            </div>
+                            <div class="form-group">
+                                <label>Age</label>
+                                <input type="number" id="defendant-age" placeholder="Age" min="1" max="120">
+                            </div>
+                            <div class="form-group">
+                                <label>Mobile Number</label>
+                                <input type="tel" id="defendant-mobile" placeholder="10-digit mobile">
+                            </div>
+                            <div class="form-group">
+                                <label>Aadhaar Number</label>
+                                <input type="text" id="defendant-aadhaar" placeholder="XXXX-XXXX-XXXX" maxlength="14">
+                            </div>
+                            <div class="form-group">
+                                <label>Defendant's Advocate</label>
+                                <input type="text" id="defendant-advocate" placeholder="Defendant's advocate (if known)">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Address</label>
+                            <textarea id="defendant-address" rows="2" placeholder="Complete residential address"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div class="card" style="margin-bottom:20px;">
+                    <div class="card-body">
+                        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:8px;">
+                            <button type="button" class="btn btn-secondary" id="btn-civil-reset">Reset Form</button>
+                            <button type="submit" class="btn" id="btn-submit-civil" style="background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; font-weight:800; padding:12px 28px; border:none;">&#10003; Register Civil Plaint</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        `;
+
+        // Back button
+        tabContent.querySelector('#btn-back-civil').addEventListener('click', () => {
+            state.staffActiveTab = 'status';
+            onUpdate();
+        });
+
+        // Reset
+        tabContent.querySelector('#btn-civil-reset').addEventListener('click', () => {
+            tabContent.querySelector('#civil-suit-form').reset();
+        });
+
+        // Submit
+        tabContent.querySelector('#civil-suit-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const suitType  = tabContent.querySelector('#civil-suit-type').value;
+            const caseId    = tabContent.querySelector('#civil-case-no').value;
+            const judge     = tabContent.querySelector('#civil-judge').value;
+            const court     = tabContent.querySelector('#civil-court').value;
+            const filingDate = tabContent.querySelector('#civil-filing-date').value;
+            const hearingDate = tabContent.querySelector('#civil-hearing-date').value;
+            const description = tabContent.querySelector('#civil-description').value;
+            const relief     = tabContent.querySelector('#civil-relief').value;
+
+            const plaintiffName    = tabContent.querySelector('#plaintiff-name').value;
+            const plaintiffFather  = tabContent.querySelector('#plaintiff-father').value;
+            const plaintiffAge     = tabContent.querySelector('#plaintiff-age').value;
+            const plaintiffMobile  = tabContent.querySelector('#plaintiff-mobile').value;
+            const plaintiffAadhaar = tabContent.querySelector('#plaintiff-aadhaar').value;
+            const plaintiffAdvocate = tabContent.querySelector('#plaintiff-advocate').value;
+            const plaintiffAddress = tabContent.querySelector('#plaintiff-address').value;
+
+            const defendantName    = tabContent.querySelector('#defendant-name').value;
+            const defendantFather  = tabContent.querySelector('#defendant-father').value;
+            const defendantAge     = tabContent.querySelector('#defendant-age').value;
+            const defendantMobile  = tabContent.querySelector('#defendant-mobile').value;
+            const defendantAadhaar = tabContent.querySelector('#defendant-aadhaar').value;
+            const defendantAdvocate = tabContent.querySelector('#defendant-advocate').value;
+            const defendantAddress = tabContent.querySelector('#defendant-address').value;
+
+            const newCivilCase = {
+                caseId: caseId,
+                case_id: caseId, // for compatibility
+                caseType: 'CIVIL',
+                civilType: suitType,
+                courtNumber: court,
+                presidingJudge: judge,
+                filingDate,
+                hearingDate,
+                description,
+                reliefSought: relief,
+                orderStatus: 'PENDING',
+                digitalSignature: '',
+                judgeRemarks: '',
+                petitioner: {
+                    name: plaintiffName,
+                    fatherName: plaintiffFather,
+                    fathersName: plaintiffFather,
+                    age: plaintiffAge,
+                    mobileNumber: plaintiffMobile,
+                    aadhaar: plaintiffAadhaar,
+                    advocate: plaintiffAdvocate,
+                    address: plaintiffAddress
+                },
+                plaintiff: { // for compatibility
+                    name: plaintiffName,
+                    fatherName: plaintiffFather,
+                    age: plaintiffAge,
+                    mobile: plaintiffMobile,
+                    aadhaar: plaintiffAadhaar,
+                    advocate: plaintiffAdvocate,
+                    address: plaintiffAddress
+                },
+                respondent: {
+                    name: defendantName,
+                    fatherName: defendantFather,
+                    fathersName: defendantFather,
+                    age: defendantAge,
+                    mobileNumber: defendantMobile,
+                    aadhaar: defendantAadhaar,
+                    advocate: defendantAdvocate,
+                    address: defendantAddress
+                },
+                defendant: { // for compatibility
+                    name: defendantName,
+                    fatherName: defendantFather,
+                    age: defendantAge,
+                    mobile: defendantMobile,
+                    aadhaar: defendantAadhaar,
+                    advocate: defendantAdvocate,
+                    address: defendantAddress
+                }
+            };
+
+            if (!state.civilCases) state.civilCases = [];
+            state.civilCases.unshift(newCivilCase);
+            if (state.saveCivilDatabase) state.saveCivilDatabase();
+
+            alert('Civil Plaint registered successfully! It will appear in the board and Civil Judge dashboard.');
+            state.staffActiveTab = 'status';
+            onUpdate();
+        });
+    },
+
     renderStatusBoard(tabContent, state, onUpdate) {
         // Calculate statistical numbers exactly matching mockup
         const totalCases = state.cases.length;
@@ -740,13 +1013,17 @@ export const DashboardStaff = {
             <!-- SUBHEADER SECTION -->
             <div class="dashboard-header-block" style="margin-bottom: 24px; display:flex; justify-content:space-between; align-items:center;">
                 <div class="dashboard-title">
-                    <h2 style="font-size:26px; font-weight:700;">Court Staff Dashboard — Today's Applications</h2>
-                    <p style="font-size:13px; color:var(--color-text-muted); margin-top:4px;">May 29, 2026 · Rajamundry District Court · Staff: K. Lakshmi</p>
+                    <h2 style="font-size:26px; font-weight:700;">Court Staff Dashboard &#8212; Today's Applications</h2>
+                    <p style="font-size:13px; color:var(--color-text-muted); margin-top:4px;">Rajamundry District Court &middot; Staff: K. Lakshmi</p>
                 </div>
-                <div>
-                    <button class="btn btn-success" id="btn-create-new-bail-app" style="font-weight: 700; display:inline-flex; align-items:center; justify-content:center; gap:6px;">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle;"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        <span>File New Application</span>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-success" id="btn-create-new-bail-app" style="font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>File Bail Application</span>
+                    </button>
+                    <button class="btn" id="btn-create-civil-suit" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,rgba(30,58,138,0.85),rgba(30,58,138,0.7)); color:#fff; border:1px solid #2563eb;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>File Civil Plaint</span>
                     </button>
                 </div>
             </div>
@@ -790,14 +1067,55 @@ export const DashboardStaff = {
                             </tr>
                         </thead>
                         <tbody>
-                            ${tableRowsHtml}
+                            ${tableRowsHtml || '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--color-text-muted);">No bail applications registered yet.</td></tr>'}
                         </tbody>
                     </table>
                 </div>
             </div>
+
+            <!-- civil plaints SECTION -->
+            <div style="margin-top:30px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h3 style="font-size:16px; font-weight:800; color:#2563eb; display:flex; align-items:center; gap:8px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:#2563eb;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        Civil Plaint Cases
+                        <span style="font-size:11px; font-weight:700; background:rgba(30,58,138,0.15); color:#2563eb; padding:2px 8px; border-radius:10px; border:1px solid rgba(30,58,138,0.3);">${(state.civilCases||[]).length} Suits</span>
+                    </h3>
+                </div>
+                <div class="table-card-mock">
+                    <div class="data-table-wrapper">
+                        <table class="mock-table">
+                            <thead>
+                                <tr>
+                                    <th>Case ID</th>
+                                    <th>Suit Type</th>
+                                    <th>Plaintiff</th>
+                                    <th>Defendant</th>
+                                    <th>Judge</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${(state.civilCases||[]).length === 0
+                                    ? '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--color-text-muted);">No civil plaints registered yet. Click "File Civil Plaint" to add one.</td></tr>'
+                                    : (state.civilCases||[]).map(cs => `
+                                <tr style="cursor:default;">
+                                    <td class="case-no-cell" style="color:#2563eb;">${cs.case_id || cs.caseId || '-'}</td>
+                                    <td><span style="font-size:11px; background:rgba(30,58,138,0.12); color:#2563eb; border:1px solid rgba(30,58,138,0.25); border-radius:4px; padding:2px 8px; font-weight:700;">${cs.civilType || cs.case_type || 'Civil'}</span></td>
+                                    <td><div style="font-weight:600;">${(cs.plaintiff && cs.plaintiff.name) || cs.plaintiffName || '-'}</div></td>
+                                    <td><div style="font-weight:600;">${(cs.defendant && cs.defendant.name) || cs.defendantName || '-'}</div></td>
+                                    <td style="font-size:12px;">${cs.presidingJudge || '-'}</td>
+                                    <td><span class="status-indicator-mock ${cs.orderStatus === 'PENDING' ? 'checking' : cs.orderStatus === 'GRANTED' ? 'ready' : 'alert'}">${cs.orderStatus || 'PENDING'}</span></td>
+                                </tr>`).join('')
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         `;
 
-        // Bind table row clicks -> Securely triggers report viewer to print documents
+        // Bind table row clicks -> criminal bail report viewer
         tabContent.querySelectorAll('.case-mockup-row').forEach(row => {
             row.addEventListener('click', (e) => {
                 const caseNo = e.currentTarget.getAttribute('data-case');
@@ -808,11 +1126,20 @@ export const DashboardStaff = {
             });
         });
 
-        // Bind File New Application button to switch tab
+        // File Bail Application button
         const createNewBtn = tabContent.querySelector('#btn-create-new-bail-app');
         if (createNewBtn) {
             createNewBtn.addEventListener('click', () => {
                 state.staffActiveTab = 'register';
+                onUpdate();
+            });
+        }
+
+        // File Civil Plaint button
+        const civilBtn = tabContent.querySelector('#btn-create-civil-suit');
+        if (civilBtn) {
+            civilBtn.addEventListener('click', () => {
+                state.staffActiveTab = 'civil_register';
                 onUpdate();
             });
         }

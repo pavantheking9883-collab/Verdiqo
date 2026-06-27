@@ -7,6 +7,7 @@
 import { VerificationEngine } from './utils/verificationEngine.js';
 import { DashboardStaff } from './components/DashboardStaff.js';
 import { DashboardJudge } from './components/DashboardJudge.js';
+import { DashboardCivilJudge } from './components/DashboardCivilJudge.js';
 import { DashboardAdmin } from './components/DashboardAdmin.js';
 import { DashboardCitizen } from './components/DashboardCitizen.js';
 import { ReportViewer } from './components/ReportViewer.js';
@@ -551,13 +552,198 @@ const INITIAL_DATABASE = [
     }
 ];
 
+// Civil Plaint Cases Database — District Court Docket
+const CIVIL_CASES_DATABASE = [
+    {
+        caseId: 'CL-2024-0012',
+        caseType: 'CIVIL',
+        civilType: 'Property Dispute',
+        courtNumber: 'Civil Court Room 1, Rajamundry',
+        presidingJudge: 'Hon\'ble J. Kameswara Rao',
+        filingDate: '2024-03-14',
+        lastHearingDate: '2026-05-10',
+        nextHearingDate: '2026-07-05',
+        pendingDays: 836,
+        orderStatus: 'PENDING',   // PENDING | INTERIM_ORDER | FINAL_DECREE | POSTPONED
+        interimOrders: ['Interim injunction granted — respondent restrained from selling property (Order dt. 2024-07-01)'],
+        decreeText: '',
+        postponedTo: '',
+        judgeRemarks: '',
+        digitalSignature: '',
+        petitioner: {
+            name: 'Smt. Padmavathi Devi Alluri',
+            advocate: 'Adv. K. Ramachandra Rao',
+            address: 'D.No 2-4-17, Tadepalligudem Road, Rajamundry',
+            aadhaar: '234567890123',
+            mobileNumber: '9441234567'
+        },
+        respondent: {
+            name: 'Sri. Venkata Rao Alluri',
+            advocate: 'Adv. P. Subrahmanyam',
+            address: 'D.No 2-4-17, Tadepalligudem Road, Rajamundry',
+            aadhaar: '345678901234',
+            mobileNumber: '9440987654'
+        },
+        propertyDetails: 'Agricultural land of 2.45 acres, Survey No. RS-129/4-A, Tadepalligudem, East Godavari. Disputed succession after death of Sri. Narayana Rao Alluri (2022). Petitioner claims sole heirship.',
+        reliefSought: 'Declaration of ownership and possession of the disputed land. Partition decree as legal heir.',
+        stageSummary: 'Arguments concluded. Evidence recording complete. Awaiting final judgment.',
+        hearingHistory: [
+            { date: '2024-04-01', note: 'Plaint filed. Summons issued to respondent.' },
+            { date: '2024-06-15', note: 'Written statement filed by respondent. Issues framed.' },
+            { date: '2024-07-01', note: 'Interim injunction granted. Respondent restrained from alienation.' },
+            { date: '2025-02-12', note: 'Petitioner examination complete. 3 witnesses examined.' },
+            { date: '2025-09-04', note: 'Respondent evidence recording concluded.' },
+            { date: '2026-05-10', note: 'Final arguments heard. Reserved for judgment.' }
+        ]
+    },
+    {
+        caseId: 'CL-2025-0034',
+        caseType: 'CIVIL',
+        civilType: 'Money Recovery Suit',
+        courtNumber: 'Civil Court Room 1, Rajamundry',
+        presidingJudge: 'Hon\'ble J. Kameswara Rao',
+        filingDate: '2025-01-20',
+        lastHearingDate: '2026-06-01',
+        nextHearingDate: '2026-07-18',
+        pendingDays: 523,
+        orderStatus: 'INTERIM_ORDER',
+        interimOrders: ['Attachment before judgment issued on defendant\'s bank accounts (Order dt. 2025-03-10)'],
+        decreeText: '',
+        postponedTo: '',
+        judgeRemarks: 'Attachment before judgment order sustained. Defendant directed to file asset disclosure statement by next hearing.',
+        digitalSignature: 'SHA-256/CIVIL-2025-0034/KAMESWARA',
+        petitioner: {
+            name: 'M/s. Sri Sai Traders (Prop: T. Venkateswar Rao)',
+            advocate: 'Adv. S. Srinivasa Rao',
+            address: '12-3-45, Commercial Complex, Main Road, Rajamundry',
+            aadhaar: '456789012345',
+            mobileNumber: '9849123456'
+        },
+        respondent: {
+            name: 'Sri. Ravi Kumar Nanduri',
+            advocate: 'Adv. M. Appala Raju',
+            address: 'Flat 3B, Sri Venkateswara Apartments, Danavaipeta, Rajamundry',
+            aadhaar: '567890123456',
+            mobileNumber: '9701234567'
+        },
+        propertyDetails: 'Loan of ₹18,50,000 advanced on 2024-08-15 per written agreement. Defendant defaulted. Promissory note and bank transfer evidence produced.',
+        reliefSought: 'Decree for recovery of ₹18,50,000 with 18% p.a. interest from date of default plus legal costs.',
+        stageSummary: 'Attachment before judgment order in effect. Written statement filed. Awaiting evidence recording.',
+        hearingHistory: [
+            { date: '2025-01-20', note: 'Suit filed. Summons issued.' },
+            { date: '2025-03-10', note: 'Application for attachment before judgment. Order granted.' },
+            { date: '2025-06-05', note: 'Written statement filed. Issues framed.' },
+            { date: '2025-11-14', note: 'Petitioner\'s evidence recorded.' },
+            { date: '2026-06-01', note: 'Defendant examination in progress. Adjourned to next date.' }
+        ]
+    },
+    {
+        caseId: 'CL-2025-0061',
+        caseType: 'CIVIL',
+        civilType: 'Matrimonial (Divorce)',
+        courtNumber: 'Family Court, Rajamundry',
+        presidingJudge: 'Hon\'ble J. Kameswara Rao',
+        filingDate: '2025-04-08',
+        lastHearingDate: '2026-06-15',
+        nextHearingDate: '2026-08-02',
+        pendingDays: 445,
+        orderStatus: 'PENDING',
+        interimOrders: ['Interim maintenance of ₹8,000/month ordered to wife from 2025-06-01'],
+        decreeText: '',
+        postponedTo: '',
+        judgeRemarks: '',
+        digitalSignature: '',
+        petitioner: {
+            name: 'Sri. Anil Kumar Reddy',
+            advocate: 'Adv. R. Nageswara Rao',
+            address: 'D.No 7-1-22, Kotipalli Road, Rajamundry',
+            aadhaar: '678901234567',
+            mobileNumber: '9440567890'
+        },
+        respondent: {
+            name: 'Smt. Lakshmi Reddy (W/o Anil Kumar)',
+            advocate: 'Adv. K. Uma Maheshwari',
+            address: 'D.No 3-9-14, Innespeta, Rajamundry',
+            aadhaar: '789012345678',
+            mobileNumber: '9441678901'
+        },
+        propertyDetails: 'Matrimonial dispute. Married on 2018-02-14. Separated since 2024-11-01. Petitioner seeks divorce on grounds of cruelty (Section 13(1)(ia), Hindu Marriage Act).',
+        reliefSought: 'Decree of divorce dissolving marriage. Settlement of matrimonial assets. Child custody arrangement for minor daughter (age 4).',
+        stageSummary: 'Mediation failed (2025-08-12). Evidence recording ongoing. Interim maintenance order in effect.',
+        hearingHistory: [
+            { date: '2025-04-08', note: 'Petition filed. Summons issued to respondent.' },
+            { date: '2025-06-01', note: 'Interim maintenance ₹8,000/month ordered.' },
+            { date: '2025-08-12', note: 'Mediation attempted. Failed. Trial ordered to proceed.' },
+            { date: '2025-12-05', note: 'Petitioner evidence partially recorded.' },
+            { date: '2026-06-15', note: 'Cross-examination of petitioner witness. Adjourned.' }
+        ]
+    },
+    {
+        caseId: 'CL-2026-0008',
+        caseType: 'CIVIL',
+        civilType: 'Contract Breach',
+        courtNumber: 'Civil Court Room 1, Rajamundry',
+        presidingJudge: 'Hon\'ble J. Kameswara Rao',
+        filingDate: '2026-02-10',
+        lastHearingDate: '2026-06-20',
+        nextHearingDate: '2026-07-25',
+        pendingDays: 137,
+        orderStatus: 'PENDING',
+        interimOrders: [],
+        decreeText: '',
+        postponedTo: '',
+        judgeRemarks: '',
+        digitalSignature: '',
+        petitioner: {
+            name: 'M/s. Coastal Constructions Pvt Ltd',
+            advocate: 'Adv. B. Satyanarayana',
+            address: '5th Floor, Rajamundry Tower, NH-16 Service Road',
+            aadhaar: '890123456789',
+            mobileNumber: '9849876543'
+        },
+        respondent: {
+            name: 'Sri. Hanumantha Rao Pilla',
+            advocate: 'Adv. G. Venkataramana',
+            address: 'D.No 10-2-4, Rajanagaram Road, Rajamundry',
+            aadhaar: '901234567890',
+            mobileNumber: '9440234567'
+        },
+        propertyDetails: 'Construction contract dated 2025-09-01 for residential complex (G+3, 12 flats). Petitioner completed 65% work; respondent stopped payment citing alleged quality defects. Dispute over ₹42,00,000 balance.',
+        reliefSought: 'Specific performance of contract OR damages of ₹42,00,000 plus ₹8,00,000 loss of profit with 12% interest.',
+        stageSummary: 'Early stages. Written statement due. Issues framing scheduled.',
+        hearingHistory: [
+            { date: '2026-02-10', note: 'Plaint filed. Urgent interim injunction application filed.' },
+            { date: '2026-03-15', note: 'Interim injunction application dismissed. Case to proceed on merits.' },
+            { date: '2026-05-04', note: 'Summons served. Written statement time extended.' },
+            { date: '2026-06-20', note: 'Written statement filed. Issues to be framed at next date.' }
+        ]
+    }
+];
+
 class ApplicationState {
     constructor() {
+        // ── ONE-TIME FORCED RESET ──────────────────────────────────────────
+        // Clears old contaminated localStorage that mixed civil + criminal cases.
+        // After running once, sets a flag so it doesn't repeat on next load.
+        const APP_RESET_KEY = 'verdiqo_app_reset_v5';
+        if (!localStorage.getItem(APP_RESET_KEY)) {
+            localStorage.removeItem('verdiqo_db');
+            localStorage.removeItem('verdiqo_civil_db');
+            localStorage.removeItem('verdiqo_db_version');
+            localStorage.removeItem('verdiqo_civil_db_version');
+            localStorage.setItem(APP_RESET_KEY, 'done');
+            console.log('[Verdiqo] Cache reset complete — fresh data loaded.');
+        }
+        // ──────────────────────────────────────────────────────────────────
+
         this.language = 'EN'; // 'EN' or 'HI'
         this.currentUser = null; // Active logged-in user object
         this.cases = [];
+        this.civilCases = [];
         this.staffActiveTab = 'status'; // Status Board is default tab to match reference mockup
         this.selectedCaseNumber = null;
+        this.selectedCivilCaseId = null;
+        this.judgeViewMode = 'CRIMINAL'; // 'CRIMINAL' | 'CIVIL' — active docket tab in judge view
         this.citizenSearchQuery = '';
         this.citizenActiveMobileTab = 'home';
         
@@ -566,6 +752,7 @@ class ApplicationState {
         this.applyTheme();
         
         this.initDatabase();
+        this.initCivilDatabase();
     }
 
     applyTheme() {
@@ -586,10 +773,45 @@ class ApplicationState {
      * Initializes the registry database and runs scoring logic
      */
     initDatabase() {
+        const DB_VERSION = 'v3-criminal-only';
         const cached = localStorage.getItem('verdiqo_db');
-        if (cached && JSON.parse(cached)[0]?.filingDate) {
-            this.cases = JSON.parse(cached);
+        const cachedVersion = localStorage.getItem('verdiqo_db_version');
+
+        // If cache version doesn't match OR cache has civil cases contamination, reset
+        let parsedCache = null;
+        if (cached && cachedVersion === DB_VERSION) {
+            parsedCache = JSON.parse(cached);
+            // Extra safety: filter out any civil cases that crept in (no caseNumber = criminal)
+            parsedCache = parsedCache.filter(c => c.caseNumber && c.caseNumber.startsWith('BMS/'));
+        }
+
+        if (parsedCache && parsedCache.length > 0 && parsedCache[0]?.filingDate) {
+            this.cases = parsedCache.map(c => {
+                if (!c.checks || !c.checks.risk || !c.checks.identity || !c.checks.property || !c.checks.suretyLoad) {
+                    const idCheck = VerificationEngine.verifyIdentity(c.accused.aadhaarNumber, true, true);
+                    const finCheck = VerificationEngine.verifyFinancialCapacity(c.surety.panNumber || 'DUMMYPAN12', [35000, 36000, 38000], c.accused.bankBalance6m || 22000, c.accused.cibilScore || 680, c.proposedBailAmount || 50000);
+                    const riskCheck = VerificationEngine.calculateRiskScore(c.accused.ncrbCount || 0, c.accused.prevBailsGranted || 0, c.accused.prevBailsHonored || 0, c.accused.abscondingCount || 0, c.accused.travelRestricted || false);
+                    const suretyCheck = VerificationEngine.verifySuretyLoad(c.surety.activeBailCount || 0, 0);
+                    const propCheck = VerificationEngine.verifyProperty(true, c.surety.fullName, c.surety.fullName, c.surety.encumbranceStatus === 'ENCUMBERED', c.surety.propertyValuation || 500000, c.proposedBailAmount || 50000);
+                    
+                    const recCheck = VerificationEngine.compileRecommendation(idCheck, finCheck, riskCheck, suretyCheck, propCheck);
+
+                    c.checks = {
+                        identity: idCheck,
+                        finance: finCheck,
+                        risk: riskCheck,
+                        suretyLoad: suretyCheck,
+                        property: propCheck,
+                        recommendation: recCheck
+                    };
+                }
+                return c;
+            });
         } else {
+            // Clear any stale cache and rebuild from source
+            localStorage.removeItem('verdiqo_db');
+            localStorage.removeItem('verdiqo_civil_db');
+
             // Populate and run verification scores on initial datasets
             this.cases = INITIAL_DATABASE.map(c => {
                 const idCheck = VerificationEngine.verifyIdentity(c.accused.aadhaarNumber, true, true);
@@ -615,8 +837,39 @@ class ApplicationState {
     }
 
     saveDatabase() {
-        localStorage.setItem('verdiqo_db', JSON.stringify(this.cases));
+        localStorage.setItem('verdiqo_db_version', 'v3-criminal-only');
+        // Only save criminal bail cases (BMS/ prefix)
+        const criminalOnly = this.cases.filter(c => c.caseNumber && c.caseNumber.startsWith('BMS/'));
+        localStorage.setItem('verdiqo_db', JSON.stringify(criminalOnly));
     }
+
+    initCivilDatabase() {
+        const CIVIL_DB_VERSION = 'v3-civil-only';
+        const cached = localStorage.getItem('verdiqo_civil_db');
+        const cachedVersion = localStorage.getItem('verdiqo_civil_db_version');
+
+        let parsedCache = null;
+        if (cached && cachedVersion === CIVIL_DB_VERSION) {
+            parsedCache = JSON.parse(cached);
+            // Extra safety: filter out any criminal cases that crept in
+            parsedCache = parsedCache.filter(c => c.caseId && c.caseId.startsWith('CL-'));
+        }
+
+        if (parsedCache && parsedCache.length > 0) {
+            this.civilCases = parsedCache;
+        } else {
+            this.civilCases = JSON.parse(JSON.stringify(CIVIL_CASES_DATABASE));
+            this.saveCivilDatabase();
+        }
+    }
+
+    saveCivilDatabase() {
+        localStorage.setItem('verdiqo_civil_db_version', 'v3-civil-only');
+        // Only save civil cases (CL- prefix)
+        const civilOnly = this.civilCases.filter(c => c.caseId && c.caseId.startsWith('CL-'));
+        localStorage.setItem('verdiqo_civil_db', JSON.stringify(civilOnly));
+    }
+
 
     translate(enText, hiText) {
         return this.language === 'HI' ? hiText : enText;
@@ -633,8 +886,15 @@ class ApplicationState {
                 return true;
             }
         } else if (role === 'JUDGE') {
+            // Criminal Sessions Judge — handles Bail Applications only
             if (username === 'judge_kameswara' || username === 'judge1') {
-                this.currentUser = { name: 'Hon\'ble J. Kameswara Rao', role: 'JUDGE', designation: 'Preceding Judge', court: 'Sessions Court Room 2' };
+                this.currentUser = { name: 'Hon\'ble J. Kameswara Rao', role: 'JUDGE', designation: 'Sessions Judge (Criminal Bench)', court: 'Sessions Court Room 2, Rajamundry' };
+                return true;
+            }
+        } else if (role === 'CIVIL_JUDGE') {
+            // Civil Court Judge — handles civil plaints only
+            if (username === 'judge_suryaprakash' || username === 'civiljudge1') {
+                this.currentUser = { name: 'Hon\'ble B. Surya Prakash Rao', role: 'CIVIL_JUDGE', designation: 'Principal Civil Judge (Junior Division)', court: 'Civil Court Room 1, Rajamundry' };
                 return true;
             }
         } else if (role === 'ADMIN') {
@@ -758,7 +1018,7 @@ function updateUI() {
                     <!-- Dynamic Light / Dark mode toggle (Sun / Moon SVG) -->
                     <button class="theme-toggle-btn-mock" id="global-theme-toggle" title="Toggle Light/Dark Theme">
                         ${AppState.theme === 'dark' 
-                            ? `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#38bdf8" stroke-width="2.5" style="vertical-align:middle;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>` 
+                            ? `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2.5" style="vertical-align:middle;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>` 
                             : `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#b45309" stroke-width="2.5" style="vertical-align:middle;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`}
                     </button>
                     
@@ -792,7 +1052,11 @@ function updateUI() {
     if (activeRole === 'STAFF') {
         DashboardStaff.render(mountPoint, AppState, updateUI);
     } else if (activeRole === 'JUDGE') {
+        // Criminal Sessions Judge — bail applications only
         DashboardJudge.render(mountPoint, AppState, updateUI);
+    } else if (activeRole === 'CIVIL_JUDGE') {
+        // Civil Court Judge — Civil Plaint suits only
+        DashboardCivilJudge.render(mountPoint, AppState, updateUI);
     } else if (activeRole === 'ADMIN') {
         DashboardAdmin.render(mountPoint, AppState, updateUI);
     } else if (activeRole === 'CITIZEN') {
@@ -810,6 +1074,9 @@ function renderLoginPortal(root) {
         if (selectedRole === 'JUDGE') {
             defaultUser = 'judge_kameswara';
             defaultPass = 'justice789';
+        } else if (selectedRole === 'CIVIL_JUDGE') {
+            defaultUser = 'judge_suryaprakash';
+            defaultPass = 'civil456';
         } else if (selectedRole === 'ADMIN') {
             defaultUser = 'admin_prasad';
             defaultPass = 'district456';
@@ -859,7 +1126,7 @@ function renderLoginPortal(root) {
                         <!-- Theme Toggler in secure login header (Sun / Moon SVG) -->
                         <button class="theme-toggle-btn-mock" id="global-theme-toggle-login" title="Toggle Light/Dark Theme">
                             ${AppState.theme === 'dark' 
-                                ? `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#38bdf8" stroke-width="2.5" style="vertical-align:middle;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>` 
+                                ? `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2.5" style="vertical-align:middle;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>` 
                                 : `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#b45309" stroke-width="2.5" style="vertical-align:middle;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`}
                         </button>
                     </div>
@@ -872,18 +1139,28 @@ function renderLoginPortal(root) {
                             <p>Quantex Adjudication Systems Portal</p>
                         </div>
                         <div class="login-body">
-                            <div class="role-selector-grid">
+                            <div class="role-selector-grid" style="grid-template-columns: repeat(3, 1fr);">
                                 <div class="role-option ${selectedRole === 'STAFF' ? 'active' : ''}" data-role="STAFF">
                                     <div class="gov-emblem-badge" style="margin-bottom:8px;">
                                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                     </div>
                                     <span>Court Staff</span>
                                 </div>
-                                <div class="role-option ${selectedRole === 'JUDGE' ? 'active' : ''}" data-role="JUDGE">
+                                <div class="role-option ${selectedRole === 'JUDGE' ? 'active' : ''}" data-role="JUDGE" style="border-color: ${selectedRole === 'JUDGE' ? 'var(--color-gold)' : 'transparent'}; position:relative;">
+                                    <div style="position:absolute; top:6px; right:6px; font-size:8px; font-weight:800; letter-spacing:0.5px; color:var(--color-danger); background:rgba(239,68,68,0.1); padding:1px 5px; border-radius:3px; border:1px solid rgba(239,68,68,0.3);">CRIMINAL</div>
                                     <div class="gov-emblem-badge" style="margin-bottom:8px;">
                                         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><path d="M12 2v20M5 7h14M5 7L3 13h4L5 7zm14 0l-2 6h4l-2-6zM12 22h6M12 22H6"/></svg>
                                     </div>
-                                    <span>Preceding Judge</span>
+                                    <span>Sessions Judge</span>
+                                    <small style="font-size:9px; color:var(--color-text-muted); display:block; margin-top:2px;">Bail Applications</small>
+                                </div>
+                                <div class="role-option ${selectedRole === 'CIVIL_JUDGE' ? 'active' : ''}" data-role="CIVIL_JUDGE" style="position:relative;">
+                                    <div style="position:absolute; top:6px; right:6px; font-size:8px; font-weight:800; letter-spacing:0.5px; color:#2563eb; background:rgba(30,58,138,0.1); padding:1px 5px; border-radius:3px; border:1px solid rgba(30,58,138,0.3);">CIVIL</div>
+                                    <div class="gov-emblem-badge" style="margin-bottom:8px; border-color:${selectedRole === 'CIVIL_JUDGE' ? '#2563eb' : 'transparent'};">
+                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color:#2563eb;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                    </div>
+                                    <span>Civil Judge</span>
+                                    <small style="font-size:9px; color:var(--color-text-muted); display:block; margin-top:2px;">Civil Plaint</small>
                                 </div>
                                 <div class="role-option ${selectedRole === 'ADMIN' ? 'active' : ''}" data-role="ADMIN">
                                     <div class="gov-emblem-badge" style="margin-bottom:8px;">
@@ -910,7 +1187,8 @@ function renderLoginPortal(root) {
                             <div class="credential-tip">
                                 <strong>Pre-defined Sandboxed Login Credentials:</strong>
                                 ${selectedRole === 'STAFF' ? '<p>User: staff_rajamundry | Pass: court123</p>' : ''}
-                                ${selectedRole === 'JUDGE' ? '<p>User: judge_kameswara | Pass: justice789</p>' : ''}
+                                ${selectedRole === 'JUDGE' ? '<p>User: judge_kameswara | Pass: justice789</p><p style="font-size:11px; color:var(--color-text-muted);">Sessions Court &mdash; Criminal Bail Applications</p>' : ''}
+                                ${selectedRole === 'CIVIL_JUDGE' ? '<p>User: judge_suryaprakash | Pass: civil456</p><p style="font-size:11px; color:var(--color-text-muted);">Civil Court &mdash; Civil Plaint Suits</p>' : ''}
                                 ${selectedRole === 'ADMIN' ? '<p>User: admin_prasad | Pass: district456</p>' : ''}
                                 ${selectedRole === 'CITIZEN' ? '<p>Aadhaar / Case Number: BMS/2026/0042 (OTP: 123456)</p>' : ''}
                             </div>

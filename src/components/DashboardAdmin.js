@@ -6,17 +6,55 @@
 
 export const DashboardAdmin = {
     render(container, state, onUpdate) {
-        // Calculate statistical numbers
+        // Criminal stats
         const totalCases = state.cases.length;
         const grantedCount = state.cases.filter(c => c.orderStatus === 'GRANTED' || c.orderStatus === 'GRANTED_WITH_CONDITIONS').length;
         const deniedCount = state.cases.filter(c => c.orderStatus === 'DENIED').length;
         const pendingCount = state.cases.filter(c => c.orderStatus === 'PENDING').length;
-        
+
+        // Civil stats
+        const civilCases = state.civilCases || [];
+        const civilTotal   = civilCases.length;
+        const civilPending = civilCases.filter(c => c.orderStatus === 'PENDING').length;
+        const civilInterim = civilCases.filter(c => c.orderStatus === 'INTERIM_ORDER').length;
+        const civilDecree  = civilCases.filter(c => c.orderStatus === 'FINAL_DECREE').length;
+
+        // Build civil docket table rows
+        const statusMap = {
+            'PENDING':       { cls: 'badge-yellow', label: 'Pending' },
+            'INTERIM_ORDER': { cls: 'badge-blue',   label: 'Interim Order' },
+            'FINAL_DECREE':  { cls: 'badge-green',  label: 'Decree Passed' },
+            'POSTPONED':     { cls: 'badge-grey',   label: 'Postponed' }
+        };
+        let civilTableRows = '';
+        if (civilCases.length === 0) {
+            civilTableRows = `<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--color-text-muted); font-size:13px;">No civil plaints on district docket yet.</td></tr>`;
+        } else {
+            civilCases.forEach(cs => {
+                const sid = statusMap[cs.orderStatus] || { cls: 'badge-yellow', label: cs.orderStatus || 'PENDING' };
+                const petName = (cs.petitioner && cs.petitioner.name) || (cs.plaintiff && cs.plaintiff.name) || '-';
+                const resName = (cs.respondent && cs.respondent.name) || (cs.defendant && cs.defendant.name) || '-';
+                const caseId  = cs.caseId || cs.case_id || '-';
+                const pendingDays = cs.pendingDays ? `<strong style="color:${cs.pendingDays > 700 ? 'var(--color-danger)' : 'var(--color-text-main)'};">${cs.pendingDays}</strong>${cs.pendingDays > 700 ? ' <span style="color:var(--color-danger); font-size:10px; font-weight:800;">&#9888; AGED</span>' : ''}` : '<span style="color:var(--color-text-muted);">-</span>';
+                civilTableRows += `
+                    <tr>
+                        <td class="code" style="color:#60a5fa; font-weight:700;">${caseId}</td>
+                        <td><span style="font-size:11px; background:rgba(37,99,235,0.12); color:#60a5fa; border:1px solid rgba(37,99,235,0.25); border-radius:4px; padding:2px 8px; font-weight:700; white-space:nowrap;">${cs.civilType || cs.case_type || 'Civil'}</span></td>
+                        <td style="font-weight:600;">${petName}</td>
+                        <td style="font-weight:600;">${resName}</td>
+                        <td style="font-size:12px; color:var(--color-text-muted);">${cs.presidingJudge || '-'}</td>
+                        <td class="code" style="font-size:12px;">${cs.filingDate || '-'}</td>
+                        <td style="font-size:12px;">${pendingDays}</td>
+                        <td><span class="badge ${sid.cls}" style="font-size:10px;">${sid.label}</span></td>
+                    </tr>`;
+            });
+        }
+
         container.innerHTML = `
             <div class="dashboard-header-block">
                 <div class="dashboard-title">
                     <h2>${state.translate('District Judge / Admin Sentinel', 'जिला न्यायाधीश / एडमिन सेंटिनल')}</h2>
-                    <p>${state.translate('Monitor court-wide performance registers and surety fraud alerts', 'न्यायालय-व्यापी प्रदर्शन रजिस्टरों और ज़मानत धोखाधड़ी अलर्ट की निगरानी करें')}</p>
+                    <p>${state.translate('Monitor court-wide performance registers, civil plaints, and surety fraud alerts', 'न्यायालय-व्यापी प्रदर्शन रजिस्टरों की निगरानी करें')}</p>
                 </div>
                 <div>
                     <button class="btn btn-primary" id="btn-admin-view-stats-report" style="display:flex; align-items:center; gap:6px; font-weight:700;">
@@ -26,7 +64,15 @@ export const DashboardAdmin = {
                 </div>
             </div>
 
-            <!-- ANALYTICS CARDS GRID -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- SECTION 1: CRIMINAL BAIL — ANALYTICS CARDS             -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <div style="margin-bottom:8px;">
+                <h3 style="font-size:13px; font-weight:800; color:var(--color-gold); letter-spacing:1px; text-transform:uppercase; display:flex; align-items:center; gap:6px; margin-bottom:12px;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--color-gold);"><path d="M12 2v20M5 7h14M5 7L3 13h4L5 7zm14 0l-2 6h4l-2-6zM12 22h6M12 22H6"/></svg>
+                    Criminal Bail Applications
+                </h3>
+            </div>
             <div class="grid-cols-4" style="margin-bottom: 24px;">
                 <div class="stat-card">
                     <div class="stat-details">
@@ -62,6 +108,88 @@ export const DashboardAdmin = {
                     </div>
                     <div class="stat-icon gold">
                         <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 2h14M5 22h14M19 2v6a7 7 0 0 1-2.24 5.24c-1.8 1.8-1.8 4.72 0 6.52A7 7 0 0 1 19 22M5 2v6a7 7 0 0 0 2.24 5.24c1.8 1.8 1.8 4.72 0 6.52A7 7 0 0 0 5 22"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- SECTION 2: CIVIL PLAINTS — STATS + DOCKET TABLE        -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <div style="margin-bottom:8px; margin-top:8px;">
+                <h3 style="font-size:13px; font-weight:800; color:#2563eb; letter-spacing:1px; text-transform:uppercase; display:flex; align-items:center; gap:6px; margin-bottom:12px;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#2563eb;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Civil Plaints &mdash; District Docket
+                </h3>
+            </div>
+
+            <!-- Civil Stats Row -->
+            <div class="grid-cols-4" style="margin-bottom: 24px;">
+                <div class="stat-card" style="border-left: 3px solid #2563eb;">
+                    <div class="stat-details">
+                        <h4>Total Civil Plaints</h4>
+                        <p style="color:#60a5fa;">${civilTotal}</p>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(30,58,138,0.25);">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#2563eb" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                </div>
+                <div class="stat-card" style="border-left: 3px solid var(--color-warning);">
+                    <div class="stat-details">
+                        <h4>Pending Plaints</h4>
+                        <p style="color:var(--color-warning);">${civilPending}</p>
+                    </div>
+                    <div class="stat-icon gold">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                </div>
+                <div class="stat-card" style="border-left: 3px solid #60a5fa;">
+                    <div class="stat-details">
+                        <h4>Interim Orders</h4>
+                        <p style="color:#60a5fa;">${civilInterim}</p>
+                    </div>
+                    <div class="stat-icon navy">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    </div>
+                </div>
+                <div class="stat-card" style="border-left: 3px solid var(--color-success);">
+                    <div class="stat-details">
+                        <h4>Final Decrees Passed</h4>
+                        <p style="color:var(--color-success);">${civilDecree}</p>
+                    </div>
+                    <div class="stat-icon green">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Civil Docket Table -->
+            <div class="card" style="margin-bottom:24px; border-top: 3px solid #2563eb;">
+                <div class="card-header" style="background:rgba(30,58,138,0.12);">
+                    <h3 style="display:flex; align-items:center; gap:8px; color:var(--color-text-main);">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#2563eb" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        Civil Plaint Docket &mdash; Full District Register
+                        <span style="font-size:11px; background:rgba(37,99,235,0.15); color:#60a5fa; border:1px solid rgba(37,99,235,0.3); border-radius:10px; padding:2px 10px; font-weight:700;">${civilTotal} Plaints</span>
+                    </h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="data-table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Case ID</th>
+                                    <th>Plaint Type</th>
+                                    <th>Petitioner</th>
+                                    <th>Respondent</th>
+                                    <th>Presiding Judge</th>
+                                    <th>Filing Date</th>
+                                    <th>Pending Days</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${civilTableRows}
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
