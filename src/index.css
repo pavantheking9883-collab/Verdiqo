@@ -2837,3 +2837,384 @@ body.light-theme .badge-yellow { background: rgba(202,138,4,0.08);   color: #b45
 body.light-theme .badge-green  { background: rgba(22,163,74,0.08);   color: #16a34a; border-color: rgba(22,163,74,0.25); }
 body.light-theme .badge-blue   { background: rgba(37,99,235,0.08);   color: #1d4ed8; border-color: rgba(37,99,235,0.25); }
 body.light-theme .badge-grey   { background: rgba(107,114,128,0.08); color: #6b7280; border-color: rgba(107,114,128,0.2); }
+
+
+/* ==========================================================================
+   VERDIQO MOBILE RESPONSIVE — COMPLETE OVERHAUL
+   Fixes: overflow, overlap, table clipping, navbar wrap, form grids, modals
+   ========================================================================== */
+
+/* Global: prevent any horizontal overflow */
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Make every direct child of body not overflow */
+#app-root, .app-wrapper {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* ────────────────────────────────────────────
+   TABLET: ≤ 1024px
+   ──────────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .top-navbar {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .main-content-area {
+    padding: 16px;
+  }
+  .form-grid-3,
+  .form-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+  .civil-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .district-panels {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ────────────────────────────────────────────
+   MOBILE: ≤ 768px
+   ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+  /* ─ Navbar ─ */
+  .top-navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 12px;
+    gap: 10px;
+    position: relative;
+  }
+  .brand-section {
+    width: 100%;
+    gap: 10px;
+  }
+  .brand-titles h1 {
+    font-size: 15px;
+    letter-spacing: 1px;
+  }
+  .brand-titles p {
+    font-size: 9px;
+    letter-spacing: 0.5px;
+  }
+  .nav-buttons-container {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: flex-start;
+  }
+  .nav-tab-btn {
+    font-size: 11px;
+    padding: 6px 10px;
+  }
+
+  /* ─ Login / Role selector ─ */
+  .login-card-wrapper {
+    padding: 16px !important;
+    margin: 12px !important;
+    border-radius: 12px !important;
+  }
+  .role-selector-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 8px !important;
+  }
+  .role-option-card {
+    padding: 14px 8px !important;
+    min-height: 80px !important;
+  }
+  .role-option-card .role-icon {
+    font-size: 22px !important;
+  }
+  .role-option-card .role-label {
+    font-size: 11px !important;
+  }
+
+  /* ─ Stats / KPI grid ─ */
+  .stats-grid-container,
+  .kpi-grid,
+  .grid-cols-4,
+  .grid-cols-3 {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px;
+  }
+  .stat-card,
+  .stat-box-mock {
+    padding: 14px 12px !important;
+  }
+  .stat-value {
+    font-size: 22px !important;
+  }
+
+  /* ─ Case panels layout ─ */
+  .case-panels-layout,
+  .judge-container,
+  .two-col-layout {
+    grid-template-columns: 1fr !important;
+    gap: 12px;
+  }
+  .hearing-list-sidebar,
+  .hearing-detail-view {
+    width: 100% !important;
+    min-width: unset !important;
+    max-width: 100% !important;
+  }
+
+  /* ─ Forms ─ */
+  .form-grid-3,
+  .form-grid-2,
+  .civil-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .form-section {
+    padding: 14px !important;
+  }
+  .form-row {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+
+  /* ─ Tables: horizontal scroll ─ */
+  .data-table-wrapper,
+  .table-responsive,
+  table {
+    display: block;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    max-width: 100%;
+  }
+  table th,
+  table td {
+    white-space: nowrap;
+    font-size: 12px;
+    padding: 8px 10px !important;
+  }
+
+  /* ─ Modals ─ */
+  .modal-overlay {
+    padding: 8px !important;
+    align-items: flex-end !important;
+  }
+  .modal-content-container,
+  .modal-box,
+  .modal-panel {
+    max-width: 100% !important;
+    width: 100% !important;
+    max-height: 92vh !important;
+    border-radius: 16px 16px 0 0 !important;
+    overflow-y: auto !important;
+    padding: 18px !important;
+  }
+
+  /* ─ Buttons row wrapping ─ */
+  .action-buttons-row,
+  .btn-group,
+  .button-row {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+  .action-buttons-row button,
+  .btn-group button,
+  .button-row button {
+    flex: 1 1 calc(50% - 8px);
+    font-size: 12px !important;
+    padding: 10px 8px !important;
+    min-width: 100px;
+  }
+
+  /* ─ Arguments/tabs ─ */
+  .arguments-box,
+  .adjudication-options {
+    grid-template-columns: 1fr !important;
+    gap: 10px;
+  }
+
+  /* ─ Card padding ─ */
+  .card,
+  .panel-card,
+  .section-card {
+    padding: 14px !important;
+    border-radius: 10px !important;
+  }
+
+  /* ─ Main content padding ─ */
+  .main-content-area,
+  .dashboard-content,
+  .page-content {
+    padding: 12px !important;
+  }
+
+  /* ─ Report / Legal docs ─ */
+  .legal-page-sheet,
+  .report-document-body {
+    padding: 16px !important;
+    font-size: 13px !important;
+  }
+  .report-header-section {
+    flex-direction: column !important;
+    text-align: center !important;
+    gap: 10px !important;
+  }
+
+  /* ─ Civil dashboard ─ */
+  .civil-dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .civil-case-list {
+    max-height: unset !important;
+  }
+
+  /* ─ District judge dashboard ─ */
+  .district-dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ─ Signature row ─ */
+  .signature-section {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  /* ─ Biometric boxes ─ */
+  .biometric-capture-zone {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ─ Section headings ─ */
+  .section-title {
+    font-size: 16px !important;
+  }
+  .page-header h2 {
+    font-size: 18px !important;
+  }
+
+  /* ─ Search/filter bar ─ */
+  .search-filter-bar {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .search-filter-bar input,
+  .search-filter-bar select {
+    width: 100% !important;
+  }
+}
+
+/* ────────────────────────────────────────────
+   SMALL MOBILE: ≤ 480px
+   ──────────────────────────────────────────── */
+@media (max-width: 480px) {
+
+  /* ─ Login ─ */
+  .login-card-wrapper {
+    margin: 6px !important;
+    padding: 14px !important;
+  }
+  .role-selector-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* ─ Stats to single col ─ */
+  .stats-grid-container,
+  .kpi-grid,
+  .grid-cols-4,
+  .grid-cols-3,
+  .grid-cols-2 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ─ Buttons to single col ─ */
+  .action-buttons-row button,
+  .btn-group button,
+  .button-row button {
+    flex: 1 1 100%;
+  }
+  .adjudication-options {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ─ Biometric single col ─ */
+  .biometric-capture-zone {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ─ Navbar brand minimised ─ */
+  .brand-logo-box {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 18px !important;
+  }
+  .brand-titles h1 {
+    font-size: 13px !important;
+  }
+  .nav-tab-btn {
+    font-size: 10px !important;
+    padding: 5px 8px !important;
+  }
+
+  /* ─ Typography scaling ─ */
+  body {
+    font-size: 13px;
+  }
+  h2, .section-title {
+    font-size: 15px !important;
+  }
+  h3 {
+    font-size: 13px !important;
+  }
+  .stat-value {
+    font-size: 20px !important;
+  }
+
+  /* ─ Table font ─ */
+  table th,
+  table td {
+    font-size: 11px !important;
+    padding: 6px 8px !important;
+  }
+
+  /* ─ Modals full screen ─ */
+  .modal-content-container,
+  .modal-box,
+  .modal-panel {
+    max-height: 97vh !important;
+    padding: 14px !important;
+    border-radius: 12px 12px 0 0 !important;
+  }
+
+  /* ─ Citizen phone frame full screen ─ */
+  .phone-frame {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: calc(100vh - 110px) !important;
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    margin: 0 !important;
+  }
+  .phone-header-notch {
+    display: none !important;
+  }
+
+  /* ─ Cards ─ */
+  .card,
+  .panel-card,
+  .section-card {
+    padding: 10px !important;
+    border-radius: 8px !important;
+  }
+
+  /* ─ Main content ─ */
+  .main-content-area,
+  .dashboard-content,
+  .page-content {
+    padding: 8px !important;
+  }
+}
