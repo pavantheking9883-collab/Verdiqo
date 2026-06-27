@@ -2908,7 +2908,10 @@ html, body {
     letter-spacing: 0.5px !important;
   }
   .brand-titles p {
-    display: none !important; /* Hide long subtitle to fit buttons */
+    font-size: 9.5px !important;
+    letter-spacing: 0.5px !important;
+    color: var(--color-gold) !important;
+    display: block !important;
   }
   .nav-buttons-container {
     width: auto !important;
@@ -3180,17 +3183,32 @@ html, body {
   }
 
   /* ─ Navbar brand minimised ─ */
-  .brand-logo-box {
-    width: 30px !important;
-    height: 30px !important;
-    font-size: 14px !important;
+  .top-navbar {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 10px 12px !important;
+  }
+  .brand-section {
+    width: 100% !important;
+    justify-content: center !important;
+    gap: 8px !important;
+  }
+  .brand-titles {
+    text-align: center !important;
   }
   .brand-titles h1 {
     font-size: 13px !important;
   }
-  .nav-tab-btn {
-    font-size: 10px !important;
-    padding: 5px 8px !important;
+  .brand-titles p {
+    font-size: 9px !important;
+    letter-spacing: 0.5px !important;
+    display: block !important;
+  }
+  .nav-buttons-container {
+    width: 100% !important;
+    justify-content: center !important;
+    margin-top: 4px !important;
   }
 
   /* ─ Typography scaling ─ */
