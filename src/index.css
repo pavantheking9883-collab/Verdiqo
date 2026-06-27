@@ -2885,92 +2885,122 @@ html, body {
    ──────────────────────────────────────────── */
 @media (max-width: 768px) {
 
-  /* ─ Navbar ─ */
+  /* ─ Navbar Fix ─ */
   .top-navbar {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 10px 12px;
-    gap: 10px;
-    position: relative;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 10px 14px !important;
+    gap: 12px !important;
   }
   .brand-section {
-    width: 100%;
-    gap: 10px;
+    width: auto !important;
+    gap: 8px !important;
+  }
+  .brand-logo-box {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 18px !important;
   }
   .brand-titles h1 {
-    font-size: 15px;
-    letter-spacing: 1px;
+    font-size: 15px !important;
+    letter-spacing: 0.5px !important;
   }
   .brand-titles p {
-    font-size: 9px;
-    letter-spacing: 0.5px;
+    display: none !important; /* Hide long subtitle to fit buttons */
   }
   .nav-buttons-container {
-    width: 100%;
-    flex-wrap: wrap;
-    gap: 6px;
-    justify-content: flex-start;
+    width: auto !important;
+    justify-content: flex-end !important;
+    gap: 8px !important;
   }
   .nav-tab-btn {
     font-size: 11px;
     padding: 6px 10px;
   }
 
-  /* ─ Login / Role selector ─ */
-  .login-card-wrapper {
-    padding: 16px !important;
-    margin: 12px !important;
-    border-radius: 12px !important;
+  /* ─ Stack Inline Header Flexboxes ─ */
+  .dashboard-header-block,
+  div[style*="display:flex"][style*="justify-content:space-between"] {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    margin-bottom: 20px !important;
   }
-  .role-selector-grid {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 8px !important;
-  }
-  .role-option-card {
-    padding: 14px 8px !important;
-    min-height: 80px !important;
-  }
-  .role-option-card .role-icon {
-    font-size: 22px !important;
-  }
-  .role-option-card .role-label {
-    font-size: 11px !important;
+  
+  /* Make sure header button layout inside stacked header is clean */
+  .dashboard-header-block > div[style*="display:flex"],
+  div[style*="display:flex"][style*="justify-content:space-between"] > div[style*="display:flex"] {
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    width: 100% !important;
   }
 
-  /* ─ Stats / KPI grid ─ */
+  .dashboard-header-block button,
+  div[style*="display:flex"][style*="justify-content:space-between"] button {
+    flex: 1 1 auto !important;
+    margin: 0 !important;
+  }
+
+  /* ─ Overwrite Inline Grids (Cards Squeezing) ─ */
+  div[style*="display:grid"][style*="grid-template-columns:repeat(4, 1fr)"],
+  div[style*="display:grid"][style*="grid-template-columns: repeat(4, 1fr)"],
+  div[style*="display:grid"][style*="grid-template-columns:repeat(3, 1fr)"],
+  div[style*="display:grid"][style*="grid-template-columns: repeat(3, 1fr)"],
   .stats-grid-container,
   .kpi-grid,
   .grid-cols-4,
   .grid-cols-3 {
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px;
-  }
-  .stat-card,
-  .stat-box-mock {
-    padding: 14px 12px !important;
-  }
-  .stat-value {
-    font-size: 22px !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
   }
 
-  /* ─ Case panels layout ─ */
+  /* ─ Case Listings Page Scroll Fix ─ */
+  .judge-container {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  .hearing-list-sidebar {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    height: auto !important;
+    border-radius: 10px !important;
+  }
+
+  .hearing-list {
+    max-height: none !important; /* Let list expand fully */
+    overflow-y: visible !important; /* Scroll page instead of box */
+  }
+
+  .hearing-item {
+    padding: 16px !important; /* Bigger tap target */
+  }
+
+  .hearing-detail-view {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 10px !important;
+  }
+
+  /* ─ Case detail page grid fixes ─ */
   .case-panels-layout,
-  .judge-container,
   .two-col-layout {
     grid-template-columns: 1fr !important;
     gap: 12px;
-  }
-  .hearing-list-sidebar,
-  .hearing-detail-view {
-    width: 100% !important;
-    min-width: unset !important;
-    max-width: 100% !important;
   }
 
   /* ─ Forms ─ */
   .form-grid-3,
   .form-grid-2,
-  .civil-form-grid {
+  .civil-form-grid,
+  div[style*="grid-template-columns: repeat(3, 1fr)"],
+  div[style*="grid-template-columns:repeat(3, 1fr)"] {
     grid-template-columns: 1fr !important;
   }
   .form-section {
@@ -3046,6 +3076,7 @@ html, body {
   }
 
   /* ─ Main content padding ─ */
+  .main-content,
   .main-content-area,
   .dashboard-content,
   .page-content {
@@ -3121,13 +3152,16 @@ html, body {
     grid-template-columns: 1fr 1fr !important;
   }
 
-  /* ─ Stats to single col ─ */
+  /* Keep stats grid 2 columns even on small screen for layout symmetry */
+  div[style*="display:grid"][style*="grid-template-columns:repeat(4, 1fr)"],
+  div[style*="display:grid"][style*="grid-template-columns: repeat(4, 1fr)"],
+  div[style*="display:grid"][style*="grid-template-columns:repeat(3, 1fr)"],
+  div[style*="display:grid"][style*="grid-template-columns: repeat(3, 1fr)"],
   .stats-grid-container,
   .kpi-grid,
   .grid-cols-4,
-  .grid-cols-3,
-  .grid-cols-2 {
-    grid-template-columns: 1fr !important;
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 
   /* ─ Buttons to single col ─ */
@@ -3147,9 +3181,9 @@ html, body {
 
   /* ─ Navbar brand minimised ─ */
   .brand-logo-box {
-    width: 36px !important;
-    height: 36px !important;
-    font-size: 18px !important;
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 14px !important;
   }
   .brand-titles h1 {
     font-size: 13px !important;
