@@ -415,6 +415,51 @@ async function initializeTables() {
       hearing_history TEXT
     )`);
 
+    // 7. Create table cheque_cases
+    await pool.query(`CREATE TABLE IF NOT EXISTS cheque_cases (
+      case_id TEXT PRIMARY KEY,
+      case_type TEXT,
+      court_number TEXT,
+      presiding_judge TEXT,
+      filing_date TEXT,
+      last_hearing_date TEXT,
+      next_hearing_date TEXT,
+      pending_days INTEGER,
+      order_status TEXT,
+      cheque_number TEXT,
+      cheque_amount REAL,
+      cheque_date TEXT,
+      bank_name TEXT,
+      ifsc_code TEXT,
+      dishonour_date TEXT,
+      dishonour_reason TEXT,
+      dasti_status TEXT,
+      electronic_status TEXT,
+      electronic_email TEXT,
+      electronic_whatsapp TEXT,
+      affidavit_uploaded BOOLEAN DEFAULT FALSE,
+      affidavit_url TEXT,
+      qr_code_url TEXT,
+      payment_confirmed BOOLEAN DEFAULT FALSE,
+      payment_date TEXT,
+      synopsis_text TEXT,
+      summary_trial_reasons TEXT,
+      q1_belongs_to_accused TEXT,
+      q2_signature_is_yours TEXT,
+      q3_delivered_to_complainant TEXT,
+      q4_owed_liability TEXT,
+      q5_defence_type TEXT,
+      q5_defence_details TEXT,
+      q6_wish_to_compound TEXT,
+      responses_recorded BOOLEAN DEFAULT FALSE,
+      interim_ordered BOOLEAN DEFAULT FALSE,
+      interim_amount REAL,
+      interim_status TEXT,
+      petitioner TEXT,
+      respondent TEXT,
+      hearing_history TEXT
+    )`);
+
     // Check if seeding is required
     const resCases = await pool.query("SELECT COUNT(*) FROM court_cases");
     if (parseInt(resCases.rows[0].count, 10) === 0) {
@@ -428,6 +473,12 @@ async function initializeTables() {
       await seedCivilDatabase();
     }
 
+    const resCheque = await pool.query("SELECT COUNT(*) FROM cheque_cases");
+    if (parseInt(resCheque.rows[0].count, 10) === 0) {
+      console.log("Seeding database with default cheque cases...");
+      await seedChequeDatabase();
+    }
+
     console.log("Neon PostgreSQL tables initialized and verified.");
   } catch (err) {
     console.error('Error during PostgreSQL startup table setup:', err.message);
@@ -437,7 +488,7 @@ async function initializeTables() {
 // REST API ROUTES
 app.post('/api/auth/login', (req, res) => {
   const { username, password, role } = req.body;
-  if (password === 'court123' || password === 'justice789' || password === 'civil456' || password === 'district456') {
+  if (password === 'court123' || password === 'justice789' || password === 'civil456' || password === 'district456' || password === 'cheque123') {
     return res.status(200).json({ success: true, username, role, token: `JWT-MOCK-${username}-${role}` });
   }
   res.status(401).json({ success: false, message: 'Invalid credentials' });
@@ -744,6 +795,213 @@ app.put('/api/civil-cases/:caseId/verdict', async (req, res) => {
   }
 });
 
+// Cheque Cases API Routes (Section 138 NI Act)
+app.get('/api/cheque-cases', async (req, res) => {
+  try {
+    const result = await pool.query("SELECT * FROM cheque_cases ORDER BY filing_date DESC");
+    const cases = result.rows.map(row => ({
+      caseId: row.case_id,
+      caseType: row.case_type || 'CHEQUE',
+      courtNumber: row.court_number || '',
+      presidingJudge: row.presiding_judge || '',
+      filingDate: row.filing_date || '',
+      lastHearingDate: row.last_hearing_date || '',
+      nextHearingDate: row.next_hearing_date || '',
+      pendingDays: row.pending_days || 0,
+      orderStatus: row.order_status || 'PENDING',
+      chequeNumber: row.cheque_number || '',
+      chequeAmount: parseFloat(row.cheque_amount || 0),
+      chequeDate: row.cheque_date || '',
+      bankName: row.bank_name || '',
+      ifscCode: row.ifsc_code || '',
+      dishonourDate: row.dishonour_date || '',
+      dishonourReason: row.dishonour_reason || '',
+      dastiStatus: row.dasti_status || 'PENDING',
+      electronicStatus: row.electronic_status || 'PENDING',
+      electronicEmail: row.electronic_email || '',
+      electronicWhatsapp: row.electronic_whatsapp || '',
+      affidavitUploaded: row.affidavit_uploaded === true || row.affidavit_uploaded === 'true',
+      affidavitUrl: row.affidavit_url || '',
+      qrCodeUrl: row.qr_code_url || '',
+      paymentConfirmed: row.payment_confirmed === true || row.payment_confirmed === 'true',
+      paymentDate: row.payment_date || '',
+      synopsisText: row.synopsis_text || '',
+      summaryTrialReasons: row.summary_trial_reasons || '',
+      q1_belongs_to_accused: row.q1_belongs_to_accused || 'PENDING',
+      q2_signature_is_yours: row.q2_signature_is_yours || 'PENDING',
+      q3_delivered_to_complainant: row.q3_delivered_to_complainant || 'PENDING',
+      q4_owed_liability: row.q4_owed_liability || 'PENDING',
+      q5_defence_type: row.q5_defence_type || 'N/A',
+      q5_defence_details: row.q5_defence_details || '',
+      q6_wish_to_compound: row.q6_wish_to_compound || 'PENDING',
+      responsesRecorded: row.responses_recorded === true || row.responses_recorded === 'true',
+      interimOrdered: row.interim_ordered === true || row.interim_ordered === 'true',
+      interimAmount: parseFloat(row.interim_amount || 0),
+      interimStatus: row.interim_status || 'N/A',
+      petitioner: JSON.parse(row.petitioner || '{}'),
+      respondent: JSON.parse(row.respondent || '{}'),
+      hearingHistory: JSON.parse(row.hearing_history || '[]')
+    }));
+    res.status(200).json(cases);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/cheque-cases', async (req, res) => {
+  const c = req.body;
+  try {
+    const query = `
+      INSERT INTO cheque_cases (
+        case_id, case_type, court_number, presiding_judge, filing_date, last_hearing_date, next_hearing_date, pending_days, order_status,
+        cheque_number, cheque_amount, cheque_date, bank_name, ifsc_code, dishonour_date, dishonour_reason,
+        dasti_status, electronic_status, electronic_email, electronic_whatsapp, affidavit_uploaded, affidavit_url,
+        qr_code_url, payment_confirmed, payment_date, synopsis_text, summary_trial_reasons,
+        q1_belongs_to_accused, q2_signature_is_yours, q3_delivered_to_complainant, q4_owed_liability, q5_defence_type, q5_defence_details, q6_wish_to_compound, responses_recorded,
+        interim_ordered, interim_amount, interim_status, petitioner, respondent, hearing_history
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41)
+      ON CONFLICT (case_id) DO UPDATE SET
+        court_number = EXCLUDED.court_number, presiding_judge = EXCLUDED.presiding_judge, filing_date = EXCLUDED.filing_date,
+        last_hearing_date = EXCLUDED.last_hearing_date, next_hearing_date = EXCLUDED.next_hearing_date, pending_days = EXCLUDED.pending_days, order_status = EXCLUDED.order_status,
+        cheque_number = EXCLUDED.cheque_number, cheque_amount = EXCLUDED.cheque_amount, cheque_date = EXCLUDED.cheque_date, bank_name = EXCLUDED.bank_name, ifsc_code = EXCLUDED.ifsc_code,
+        dasti_status = EXCLUDED.dasti_status, electronic_status = EXCLUDED.electronic_status, electronic_email = EXCLUDED.electronic_email, electronic_whatsapp = EXCLUDED.electronic_whatsapp,
+        affidavit_uploaded = EXCLUDED.affidavit_uploaded, affidavit_url = EXCLUDED.affidavit_url, qr_code_url = EXCLUDED.qr_code_url,
+        payment_confirmed = EXCLUDED.payment_confirmed, payment_date = EXCLUDED.payment_date, synopsis_text = EXCLUDED.synopsis_text, summary_trial_reasons = EXCLUDED.summary_trial_reasons,
+        q1_belongs_to_accused = EXCLUDED.q1_belongs_to_accused, q2_signature_is_yours = EXCLUDED.q2_signature_is_yours, q3_delivered_to_complainant = EXCLUDED.q3_delivered_to_complainant, q4_owed_liability = EXCLUDED.q4_owed_liability,
+        q5_defence_type = EXCLUDED.q5_defence_type, q5_defence_details = EXCLUDED.q5_defence_details, q6_wish_to_compound = EXCLUDED.q6_wish_to_compound, responses_recorded = EXCLUDED.responses_recorded,
+        interim_ordered = EXCLUDED.interim_ordered, interim_amount = EXCLUDED.interim_amount, interim_status = EXCLUDED.interim_status, petitioner = EXCLUDED.petitioner, respondent = EXCLUDED.respondent, hearing_history = EXCLUDED.hearing_history`;
+    
+    await pool.query(query, [
+      c.caseId || c.case_id, c.caseType || 'CHEQUE', c.courtNumber || 'Special NI Act Court Room 1, Rajamundry', c.presidingJudge || 'Hon\'ble K. Srinivas Rao', c.filingDate, c.lastHearingDate, c.nextHearingDate || '', c.pendingDays || 0, c.orderStatus || 'PENDING',
+      c.chequeNumber || '', parseFloat(c.chequeAmount || 0), c.chequeDate || '', c.bankName || '', c.ifscCode || '', c.dishonourDate || '', c.dishonourReason || '',
+      c.dastiStatus || 'PENDING', c.electronicStatus || 'PENDING', c.electronicEmail || '', c.electronicWhatsapp || '', c.affidavitUploaded === true || c.affidavitUploaded === 'true', c.affidavitUrl || '',
+      c.qrCodeUrl || '', c.paymentConfirmed === true || c.paymentConfirmed === 'true', c.paymentDate || '', c.synopsisText || '', c.summaryTrialReasons || '',
+      c.q1_belongs_to_accused || 'PENDING', c.q2_signature_is_yours || 'PENDING', c.q3_delivered_to_complainant || 'PENDING', c.q4_owed_liability || 'PENDING', c.q5_defence_type || 'N/A', c.q5_defence_details || '', c.q6_wish_to_compound || 'PENDING', c.responsesRecorded === true || c.responsesRecorded === 'true',
+      c.interimOrdered === true || c.interimOrdered === 'true', parseFloat(c.interimAmount || 0), c.interimStatus || 'N/A', JSON.stringify(c.petitioner || {}), JSON.stringify(c.respondent || {}), JSON.stringify(c.hearingHistory || [])
+    ]);
+    res.status(201).json(c);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/cheque-cases/:caseId/summons', async (req, res) => {
+  const { caseId } = req.params;
+  const { dastiStatus, electronicStatus, affidavitUploaded, nextHearingDate, stageSummary, note } = req.body;
+  try {
+    const caseRes = await pool.query("SELECT hearing_history FROM cheque_cases WHERE case_id = $1", [caseId]);
+    let history = [];
+    if (caseRes.rows.length > 0 && caseRes.rows[0].hearing_history) {
+      try {
+        history = JSON.parse(caseRes.rows[0].hearing_history || '[]');
+      } catch (e) {
+        history = [];
+      }
+    }
+    if (note) {
+      history.push({ date: new Date().toISOString().split('T')[0], note });
+    }
+    
+    await pool.query(
+      `UPDATE cheque_cases 
+       SET dasti_status = $1, electronic_status = $2, affidavit_uploaded = $3, next_hearing_date = $4, order_status = $5, hearing_history = $6
+       WHERE case_id = $7`,
+      [dastiStatus, electronicStatus, affidavitUploaded, nextHearingDate, stageSummary, JSON.stringify(history), caseId]
+    );
+    res.status(200).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/cheque-cases/:caseId/trial', async (req, res) => {
+  const { caseId } = req.params;
+  const { summaryTrialReasons, q1, q2, q3, q4, q5_type, q5_details, q6, responsesRecorded, orderStatus } = req.body;
+  try {
+    await pool.query(
+      `UPDATE cheque_cases 
+       SET summary_trial_reasons = $1, q1_belongs_to_accused = $2, q2_signature_is_yours = $3, q3_delivered_to_complainant = $4, q4_owed_liability = $5, q5_defence_type = $6, q5_defence_details = $7, q6_wish_to_compound = $8, responses_recorded = $9, order_status = $10
+       WHERE case_id = $11`,
+      [summaryTrialReasons || '', q1, q2, q3, q4, q5_type, q5_details, q6, responsesRecorded, orderStatus, caseId]
+    );
+    res.status(200).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/cheque-cases/:caseId/interim', async (req, res) => {
+  const { caseId } = req.params;
+  const { interimOrdered, interimAmount, interimStatus } = req.body;
+  try {
+    await pool.query(
+      `UPDATE cheque_cases 
+       SET interim_ordered = $1, interim_amount = $2, interim_status = $3
+       WHERE case_id = $4`,
+      [interimOrdered, interimAmount, interimStatus, caseId]
+    );
+    res.status(200).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/cheque-cases/:caseId/verdict', async (req, res) => {
+  const { caseId } = req.params;
+  const { verdict, remarks, signature, decreeText } = req.body;
+  try {
+    const caseRes = await pool.query("SELECT hearing_history FROM cheque_cases WHERE case_id = $1", [caseId]);
+    let history = [];
+    if (caseRes.rows.length > 0 && caseRes.rows[0].hearing_history) {
+      try {
+        history = JSON.parse(caseRes.rows[0].hearing_history || '[]');
+      } catch (e) {
+        history = [];
+      }
+    }
+    history.push({ date: new Date().toISOString().split('T')[0], note: `Final order passed: ${verdict}.` });
+
+    await pool.query(
+      `UPDATE cheque_cases 
+       SET order_status = $1, judge_remarks = $2, digital_signature = $3, decree_text = $4, hearing_history = $5
+       WHERE case_id = $6`,
+      [verdict, remarks, signature, decreeText || '', JSON.stringify(history), caseId]
+    );
+    res.status(200).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/cheque-cases/:caseId/pay', async (req, res) => {
+  const { caseId } = req.params;
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const caseRes = await pool.query("SELECT hearing_history FROM cheque_cases WHERE case_id = $1", [caseId]);
+    let history = [];
+    if (caseRes.rows.length > 0 && caseRes.rows[0].hearing_history) {
+      try {
+        history = JSON.parse(caseRes.rows[0].hearing_history || '[]');
+      } catch (e) {
+        history = [];
+      }
+    }
+    history.push({ date: today, note: `Early settlement payment confirmed. Accused deposited full cheque amount.` });
+    history.push({ date: today, note: `Proceedings compounded u/s 147 NI Act and closed.` });
+
+    await pool.query(
+      `UPDATE cheque_cases 
+       SET order_status = 'COMPOUNDED', payment_confirmed = true, payment_date = $1, hearing_history = $2
+       WHERE case_id = $3`,
+      [today, JSON.stringify(history), caseId]
+    );
+    res.status(200).json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Database Seed Helpers
 async function seedDatabase() {
   const seedCases = [
@@ -1008,6 +1266,151 @@ async function seedCivilDatabase() {
       JSON.stringify(c.interimOrders), c.decreeText, c.postponedTo, c.judgeRemarks, c.digitalSignature,
       JSON.stringify(c.petitioner), JSON.stringify(c.respondent), c.propertyDetails, c.reliefSought, c.stageSummary,
       JSON.stringify(c.hearingHistory)
+    ]);
+  }
+}
+
+async function seedChequeDatabase() {
+  const seedChequeCases = [
+    {
+      caseId: 'CC-2024-0512',
+      caseType: 'CHEQUE',
+      courtNumber: 'Special NI Act Court Room 1, Rajamundry',
+      presidingJudge: 'Hon\'ble K. Srinivas Rao',
+      filingDate: '2024-04-12',
+      lastHearingDate: '2026-06-15',
+      nextHearingDate: '2026-07-20',
+      pendingDays: 812,
+      orderStatus: 'PENDING',
+      chequeNumber: '384910',
+      chequeAmount: 450000.0,
+      chequeDate: '2024-03-10',
+      bankName: 'State Bank of India',
+      ifscCode: 'SBIN0000918',
+      dishonourDate: '2024-04-10',
+      dishonourReason: 'Funds Insufficient',
+      dastiStatus: 'SERVED',
+      electronicStatus: 'DELIVERED',
+      electronicEmail: 'gvenkata.raman@email.com',
+      electronicWhatsapp: '9988776655',
+      affidavitUploaded: true,
+      affidavitUrl: '/uploads/affidavit_cc_2024_0512.pdf',
+      qrCodeUrl: 'upi://pay?pa=court.intake.rjm@upi&pn=Rajamundry%20Court%20Intake&am=450000.00&tr=CC-2024-0512',
+      paymentConfirmed: false,
+      paymentDate: '',
+      synopsisText: 'Complaint filed u/s 138 of NI Act for dishonour of Cheque No. 384910 for ₹4,50,000 due to Insufficient Funds. Statutory demand notice served on 2024-04-20, no payment received within 15 days.',
+      summaryTrialReasons: '',
+      q1_belongs_to_accused: 'PENDING',
+      q2_signature_is_yours: 'PENDING',
+      q3_delivered_to_complainant: 'PENDING',
+      q4_owed_liability: 'PENDING',
+      q5_defence_type: 'N/A',
+      q5_defence_details: '',
+      q6_wish_to_compound: 'PENDING',
+      responsesRecorded: false,
+      interimOrdered: true,
+      interimAmount: 90000.0,
+      interimStatus: 'PENDING',
+      petitioner: {
+        name: 'State Bank of India, RJM Branch',
+        advocate: 'Adv. S. Ramachandra Murthy',
+        address: 'Main Road Branch, Rajamundry, AP',
+        aadhaar: '112233445566',
+        mobileNumber: '9440123456'
+      },
+      respondent: {
+        name: 'Sri G. Venkata Raman',
+        advocate: 'Adv. M. Subrahmanyam',
+        address: 'Flat 402, Sai Enclave, Danavaipeta, Rajamundry',
+        aadhaar: '223344556677',
+        mobileNumber: '9988776655'
+      },
+      hearingHistory: [
+        { date: '2024-04-12', note: 'Complaint instituted and verified by court staff.' },
+        { date: '2024-05-10', note: 'Summons issued under both traditional and electronic modes.' },
+        { date: '2024-06-01', note: 'Dasti summons served upon accused; Complainant filed Affidavit of Service.' },
+        { date: '2025-01-15', note: 'Accused appeared. Inquiries regarding interim compensation (S.143-A) commenced.' },
+        { date: '2026-06-15', note: 'Interim compensation of ₹90,000 ordered. Accused directed to deposit within 60 days. Hearing adjourned to 2026-07-20 for post-cognizance summary trial questions.' }
+      ]
+    },
+    {
+      caseId: 'CC-2025-0984',
+      caseType: 'CHEQUE',
+      courtNumber: 'Special NI Act Court Room 1, Rajamundry',
+      presidingJudge: 'Hon\'ble K. Srinivas Rao',
+      filingDate: '2025-02-15',
+      lastHearingDate: '2025-02-28',
+      nextHearingDate: '2026-07-15',
+      pendingDays: 497,
+      orderStatus: 'SUMMONS_ISSUED',
+      chequeNumber: '904829',
+      chequeAmount: 1200000.0,
+      chequeDate: '2025-01-10',
+      bankName: 'HDFC Bank Ltd',
+      ifscCode: 'HDFC0000122',
+      dishonourDate: '2025-02-10',
+      dishonourReason: 'Signature Mismatch / Differs',
+      dastiStatus: 'PENDING',
+      electronicStatus: 'SENT',
+      electronicEmail: 'contact@durgaproduce.com',
+      electronicWhatsapp: '9849054321',
+      affidavitUploaded: false,
+      affidavitUrl: '',
+      qrCodeUrl: 'upi://pay?pa=court.intake.rjm@upi&pn=Rajamundry%20Court%20Intake&am=1200000.00&tr=CC-2025-0984',
+      paymentConfirmed: false,
+      paymentDate: '',
+      synopsisText: 'Cheque issued for repayment of business loan of ₹12,00,000. Dishonoured with reason "Signature Mismatch". Complainant verified that signature is genuine. Legal notice sent on 2025-02-28.',
+      summaryTrialReasons: '',
+      q1_belongs_to_accused: 'PENDING',
+      q2_signature_is_yours: 'PENDING',
+      q3_delivered_to_complainant: 'PENDING',
+      q4_owed_liability: 'PENDING',
+      q5_defence_type: 'N/A',
+      q5_defence_details: '',
+      q6_wish_to_compound: 'PENDING',
+      responsesRecorded: false,
+      interimOrdered: false,
+      interimAmount: 0.0,
+      interimStatus: 'N/A',
+      petitioner: {
+        name: 'Sri P. Satish Kumar',
+        advocate: 'Adv. V. R. K. Prasad',
+        address: 'D.No 4-12-8, Siddhartha Nagar, Vijayawada',
+        aadhaar: '334455667788',
+        mobileNumber: '9848098765'
+      },
+      respondent: {
+        name: 'M/s Durga Enterprises (represented by Partner Sri P. Nageswara Rao)',
+        advocate: 'Adv. G. Radhakrishna',
+        address: 'D.No 40-15-9, Jawaharlal Street, Rajamundry',
+        aadhaar: '445566778899',
+        mobileNumber: '9849054321'
+      },
+      hearingHistory: [
+        { date: '2025-02-15', note: 'Cheque plaint filed. Synopsis attached. Registered under CC-2025-0984.' },
+        { date: '2025-02-28', note: 'Traditional summons issued. Electronic summons sent via email and WhatsApp. Awaiting service report.' }
+      ]
+    }
+  ];
+
+  for (const c of seedChequeCases) {
+    const query = `
+      INSERT INTO cheque_cases (
+        case_id, case_type, court_number, presiding_judge, filing_date, last_hearing_date, next_hearing_date, pending_days, order_status,
+        cheque_number, cheque_amount, cheque_date, bank_name, ifsc_code, dishonour_date, dishonour_reason,
+        dasti_status, electronic_status, electronic_email, electronic_whatsapp, affidavit_uploaded, affidavit_url,
+        qr_code_url, payment_confirmed, payment_date, synopsis_text, summary_trial_reasons,
+        q1_belongs_to_accused, q2_signature_is_yours, q3_delivered_to_complainant, q4_owed_liability, q5_defence_type, q5_defence_details, q6_wish_to_compound, responses_recorded,
+        interim_ordered, interim_amount, interim_status, petitioner, respondent, hearing_history
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41)`;
+    await pool.query(query, [
+      c.caseId, c.caseType, c.courtNumber, c.presidingJudge, c.filingDate, c.lastHearingDate, c.nextHearingDate, c.pendingDays, c.orderStatus,
+      c.chequeNumber, c.chequeAmount, c.chequeDate, c.bankName, c.ifscCode, c.dishonourDate, c.dishonourReason,
+      c.dastiStatus, c.electronicStatus, c.electronicEmail, c.electronicWhatsapp, c.affidavitUploaded, c.affidavitUrl,
+      c.qrCodeUrl, c.paymentConfirmed, c.paymentDate, c.synopsisText, c.summaryTrialReasons,
+      c.q1_belongs_to_accused, c.q2_signature_is_yours, c.q3_delivered_to_complainant, c.q4_owed_liability, c.q5_defence_type, c.q5_defence_details, c.q6_wish_to_compound, c.responsesRecorded,
+      c.interimOrdered, c.interimAmount, c.interimStatus, JSON.stringify(c.petitioner), JSON.stringify(c.respondent), JSON.stringify(c.hearingHistory)
     ]);
   }
 }

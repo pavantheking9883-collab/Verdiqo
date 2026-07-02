@@ -269,14 +269,210 @@ export const DashboardCitizen = {
 
     renderTracker(phoneContent, state, onUpdate) {
         let query = state.citizenSearchQuery || 'BMS/2026/0042';
+        
         let activeCase = state.cases.find(c => c.caseNumber === query || c.accused.aadhaarNumber === query);
+        let activeCivil = null;
+        let activeCheque = null;
+
+        if (!activeCase) {
+            activeCivil = (state.civilCases || []).find(c => c.caseId === query);
+            if (!activeCivil) {
+                activeCheque = (state.chequeCases || []).find(c => c.caseId === query);
+            }
+        }
+
+        if (activeCheque) {
+            const isCompounded = activeCheque.orderStatus === 'COMPOUNDED';
+            const si = activeCheque.orderStatus === 'PENDING' ? 'checking' : activeCheque.orderStatus === 'COMPOUNDED' ? 'ready' : activeCheque.orderStatus === 'SUMMONS_ISSUED' ? 'checking' : 'alert';
+            
+            phoneContent.innerHTML = `
+                <!-- Search Bar -->
+                <div style="display:flex; gap:8px; margin-bottom:14px;">
+                    <input type="text" class="form-input code-font" id="citizen-search-input" value="${query}" style="font-size:12px; padding:6px; flex:1;">
+                    <button class="btn btn-primary" id="btn-citizen-search-ref" style="padding:6px 12px; font-size:12px;">Go</button>
+                </div>
+
+                <!-- Case summary header card -->
+                <div style="background:var(--color-card-dark); border-radius:8px; border:1px solid var(--color-border); padding:12px; margin-bottom:14px; border-left:3px solid #0d9488;">
+                    <div style="font-size:11px; text-transform:uppercase; color:var(--color-text-muted); font-weight:700;">Cheque Plaint Respondent</div>
+                    <h4 style="font-size:16px; margin-top:2px; color:var(--color-text-main);">${activeCheque.respondent.name}</h4>
+                    <p style="font-size:11px; font-family:var(--font-mono); color:#2dd4bf;">${activeCheque.caseId} • Cheque No: ${activeCheque.chequeNumber}</p>
+                    
+                    <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--color-border); padding-top:8px;">
+                        <span style="font-size:11px; font-weight:700; color:var(--color-text-muted);">S.138 Docket Status:</span>
+                        <span class="status-indicator-mock ${si}" style="font-size:10px; padding:2px 8px;">
+                            ${activeCheque.orderStatus.replace(/_/g, ' ')}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- EARLY SETTLEMENT OPTION (UPI/QR) -->
+                <div style="background:rgba(13,148,136,0.06); border:1px solid rgba(13,148,136,0.25); border-radius:8px; padding:12px; margin-bottom:14px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                        <strong style="font-size:11px; color:#2dd4bf; letter-spacing:0.8px; text-transform:uppercase;">💸 Supreme Court Guidelines Settle Option</strong>
+                        <span style="font-size:9px; background:#0d9488; color:white; padding:2px 6px; border-radius:3px; font-weight:800;">QUICK RESOLVE</span>
+                    </div>
+                    <p style="font-size:11.5px; line-height:1.4; color:var(--color-text-main); margin-bottom:10px;">
+                        Under Section 147 of the Negotiable Instruments Act, you may compromise this suit at the threshold stage by paying the cheque sum.
+                    </p>
+                    
+                    ${isCompounded ? `
+                        <div style="background:rgba(16,185,129,0.1); border:1px solid #10b981; border-radius:6px; padding:10px; text-align:center; font-size:12px; color:#10b981; font-weight:bold;">
+                            ✓ Case Compounded & Closed. Payment of ₹${activeCheque.chequeAmount.toLocaleString('en-IN')} confirmed.
+                        </div>
+                    ` : `
+                        <div style="display:flex; align-items:center; gap:10px; background:white; padding:8px; border-radius:6px; border:1px solid var(--color-border); margin-bottom:10px; justify-content:center;">
+                            <img src="https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=upi://pay?pa=court.intake.rjm@upi" width="60" height="60" alt="UPI Payment QR">
+                            <div style="text-align:left;">
+                                <div style="font-size:10px; color:#666;">Total to pay</div>
+                                <div style="font-size:18px; font-weight:800; color:#111; font-family:var(--font-mono);">₹${activeCheque.chequeAmount.toLocaleString('en-IN')}</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-success" id="btn-citizen-settle-cheque" style="width:100%; font-size:12px; padding:8px; font-weight:700; background:#10b981; color:white; border:none; border-radius:4px; cursor:pointer;">
+                            💸 Pay Cheque Amount & Settle Case
+                        </button>
+                    `}
+                </div>
+
+                <!-- SUMMONS LOGS -->
+                <div style="background:var(--color-card-dark); border-radius:8px; border:1px solid var(--color-border); padding:12px; margin-bottom:14px;">
+                    <h5 style="font-size:12px; text-transform:uppercase; margin-bottom:8px; font-weight:700; color:#2dd4bf;">Summons Delivery Status</h5>
+                    <div style="font-size:11.5px; display:flex; flex-direction:column; gap:6px;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:var(--color-text-muted);">Dasti Service (Affidavit):</span>
+                            <strong>${activeCheque.dastiStatus === 'SERVED' ? '✅ Served' : '⏳ Pending'}</strong>
+                        </div>
+                        <div style="display:flex; justify-content:space-between;">
+                            <span style="color:var(--color-text-muted);">Electronic Summons (WA/Email):</span>
+                            <strong>${activeCheque.electronicStatus === 'DELIVERED' ? '✅ Delivered' : activeCheque.electronicStatus === 'SENT' ? '✉️ Dispatched' : '⏳ Pending'}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Next Appearance / Hearing -->
+                <div style="background:var(--color-card-dark); border-radius:8px; border:1px solid var(--color-border); padding:12px; margin-bottom:14px; border-left: 3px solid #0d9488;">
+                    <div style="font-size:10px; text-transform:uppercase; color:var(--color-text-muted); font-weight:700; display:flex; align-items:center; gap:4px;">
+                        <span>Next Court appearance</span>
+                    </div>
+                    <div style="font-size:13px; font-weight:700; color:var(--color-text-main); margin-top:4px;">
+                        ${activeCheque.nextHearingDate ? activeCheque.nextHearingDate : 'Hearing Adjourned'}
+                    </div>
+                    <p style="font-size:10.5px; color:var(--color-text-muted); margin-top:2px;">
+                        Special NI Court Room 1, Rajamundry. Please arrive with your counsel.
+                    </p>
+                </div>
+
+                <!-- Timeline History -->
+                <div style="background:var(--color-card-dark); border-radius:8px; border:1px solid var(--color-border); padding:12px; margin-bottom:14px;">
+                    <h5 style="font-size:12px; text-transform:uppercase; margin-bottom:8px; font-weight:700; color:#2dd4bf;">Case Log</h5>
+                    <div style="font-size:11px; display:flex; flex-direction:column; gap:6px;">
+                        ${activeCheque.hearingHistory.map(h => `
+                            <div><span style="color:#2dd4bf;">${h.date}:</span> ${h.note}</div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div style="text-align:center; margin-top:14px;">
+                    <button class="btn" id="btn-citizen-reset-tracker" style="border:none; color:var(--color-text-muted); font-size:11px;">↩ Track Different Application</button>
+                </div>
+            `;
+
+            // Bind events for Cheque Settle
+            phoneContent.querySelector('#btn-citizen-search-ref').addEventListener('click', () => {
+                state.citizenSearchQuery = phoneContent.querySelector('#citizen-search-input').value;
+                onUpdate();
+            });
+            phoneContent.querySelector('#btn-citizen-reset-tracker').addEventListener('click', () => {
+                state.citizenSearchQuery = '';
+                onUpdate();
+            });
+            const settleBtn = phoneContent.querySelector('#btn-citizen-settle-cheque');
+            if (settleBtn) {
+                settleBtn.addEventListener('click', async () => {
+                    if (!confirm(`Settle this cheque suit u/s 147 NI Act by paying ₹${activeCheque.chequeAmount.toLocaleString('en-IN')}?`)) return;
+                    try {
+                        const res = await fetch(`/api/cheque-cases/${activeCheque.caseId}/pay`, {
+                            method: 'POST'
+                        });
+                        if (res.ok) {
+                            alert('Payment Confirmed! Case compounded successfully and proceedings closed.');
+                            await state.syncWithCloudBackend();
+                        }
+                    } catch(e) {
+                        console.error(e);
+                    }
+                });
+            }
+            return;
+        }
+
+        if (activeCivil) {
+            phoneContent.innerHTML = `
+                <!-- Search Bar -->
+                <div style="display:flex; gap:8px; margin-bottom:14px;">
+                    <input type="text" class="form-input code-font" id="citizen-search-input" value="${query}" style="font-size:12px; padding:6px; flex:1;">
+                    <button class="btn btn-primary" id="btn-citizen-search-ref" style="padding:6px 12px; font-size:12px;">Go</button>
+                </div>
+
+                <!-- Case summary header card -->
+                <div style="background:var(--color-card-dark); border-radius:8px; border:1px solid var(--color-border); padding:12px; margin-bottom:14px; border-left:3px solid #2563eb;">
+                    <div style="font-size:11px; text-transform:uppercase; color:var(--color-text-muted); font-weight:700;">Civil Suit Plaintiff</div>
+                    <h4 style="font-size:16px; margin-top:2px; color:var(--color-text-main);">${activeCivil.petitioner?.name || activeCivil.petitionerName || '-'}</h4>
+                    <p style="font-size:11px; font-family:var(--font-mono); color:#60a5fa;">${activeCivil.caseId} • Type: ${activeCivil.civilType}</p>
+                    
+                    <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid var(--color-border); padding-top:8px;">
+                        <span style="font-size:11px; font-weight:700; color:var(--color-text-muted);">Status:</span>
+                        <span class="status-indicator-mock ${activeCivil.orderStatus === 'PENDING' ? 'checking' : 'ready'}" style="font-size:10px; padding:2px 8px;">
+                            ${activeCivil.orderStatus.replace(/_/g, ' ')}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Next Appearance / Hearing -->
+                <div style="background:var(--color-card-dark); border-radius:8px; border:1px solid var(--color-border); padding:12px; margin-bottom:14px; border-left: 3px solid #2563eb;">
+                    <div style="font-size:10px; text-transform:uppercase; color:var(--color-text-muted); font-weight:700; display:flex; align-items:center; gap:4px;">
+                        <span>Next Court appearance</span>
+                    </div>
+                    <div style="font-size:13px; font-weight:700; color:var(--color-text-main); margin-top:4px;">
+                        ${activeCivil.nextHearingDate ? activeCivil.nextHearingDate : 'Hearing Adjourned'}
+                    </div>
+                    <p style="font-size:10.5px; color:var(--color-text-muted); margin-top:2px;">
+                        ${activeCivil.courtNumber || 'Civil Court Room 1, Rajamundry'}. Please arrive with your counsel.
+                    </p>
+                </div>
+
+                <!-- Timeline History -->
+                <div style="background:var(--color-card-dark); border-radius:8px; border:1px solid var(--color-border); padding:12px; margin-bottom:14px;">
+                    <h5 style="font-size:12px; text-transform:uppercase; margin-bottom:8px; font-weight:700; color:#60a5fa;">Case Log</h5>
+                    <div style="font-size:11px; display:flex; flex-direction:column; gap:6px;">
+                        ${activeCivil.hearingHistory.map(h => `
+                            <div><span style="color:#60a5fa;">${h.date}:</span> ${h.note}</div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div style="text-align:center; margin-top:14px;">
+                    <button class="btn" id="btn-citizen-reset-tracker" style="border:none; color:var(--color-text-muted); font-size:11px;">↩ Track Different Application</button>
+                </div>
+            `;
+
+            phoneContent.querySelector('#btn-citizen-search-ref').addEventListener('click', () => {
+                state.citizenSearchQuery = phoneContent.querySelector('#citizen-search-input').value;
+                onUpdate();
+            });
+            phoneContent.querySelector('#btn-citizen-reset-tracker').addEventListener('click', () => {
+                state.citizenSearchQuery = '';
+                onUpdate();
+            });
+            return;
+        }
 
         if (!activeCase) {
             phoneContent.innerHTML = `
                 <div style="text-align:center; padding: 20px 10px;">
                     <h4 style="font-size:16px; margin-bottom:12px;">Track Active Application</h4>
                     <p style="font-size:12px; color:var(--color-text-muted); margin-bottom:16px;">
-                        Enter your Case Number or Accused Aadhaar Number to check biometric and mutation progress.
+                        Enter your Case Number (Bail/Civil/Cheque) or Accused Aadhaar Number to check status.
                     </p>
                     <div class="form-group">
                         <input type="text" class="form-input code-font" id="citizen-search-input" value="${query}" placeholder="BMS/2026/0042" style="font-size:13px;">
@@ -285,8 +481,9 @@ export const DashboardCitizen = {
                     
                     <div style="margin-top: 30px; text-align:left; font-size:11px; background:var(--color-table-header); padding:12px; border-radius:6px; border:1px solid var(--color-border);">
                         <strong>Quick Sandbox Queries:</strong>
-                        <p style="font-family:var(--font-mono); margin-top:4px; color:var(--color-gold-light);">• BMS/2026/0042 (Srinivas Rao Vemuri)</p>
-                        <p style="font-family:var(--font-mono); margin-top:2px; color:var(--color-gold-light);">• BMS/2026/0040 (Anita Rao - Alert)</p>
+                        <p style="font-family:var(--font-mono); margin-top:4px; color:var(--color-gold-light);">• BMS/2026/0042 (Bail - Srinivas Rao)</p>
+                        <p style="font-family:var(--font-mono); margin-top:2px; color:#2dd4bf;">• CC-2024-0512 (S.138 Cheque Case)</p>
+                        <p style="font-family:var(--font-mono); margin-top:2px; color:#60a5fa;">• CL-2024-0012 (Civil Plaint)</p>
                     </div>
                 </div>
             `;

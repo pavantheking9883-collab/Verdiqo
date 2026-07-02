@@ -16,6 +16,8 @@ export const DashboardStaff = {
             this.renderRegisterForm(container.querySelector('#staff-tab-content'), state, onUpdate);
         } else if (activeTab === 'civil_register') {
             this.renderCivilRegisterForm(container.querySelector('#staff-tab-content'), state, onUpdate);
+        } else if (activeTab === 'cheque_register') {
+            this.renderChequeRegisterForm(container.querySelector('#staff-tab-content'), state, onUpdate);
         } else {
             this.renderStatusBoard(container.querySelector('#staff-tab-content'), state, onUpdate);
         }
@@ -957,6 +959,310 @@ export const DashboardStaff = {
         });
     },
 
+    renderChequeRegisterForm(tabContent, state, onUpdate) {
+        const todayDate = new Date().toISOString().split('T')[0];
+        const chequeCaseNo = `CC-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
+
+        tabContent.innerHTML = `
+            <div class="dashboard-header-block" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                <div class="dashboard-title">
+                    <h2 style="display:flex; align-items:center; gap:8px;">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#0d9488" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                        <span>New Cheque Dishonour Case (Sec. 138 NI Act)</span>
+                    </h2>
+                    <p>Register a new Negotiable Instruments Act summary trial plaint in the e-Courts ledger</p>
+                </div>
+                <button class="btn btn-secondary" id="btn-back-cheque" style="border-color:#0d9488; color:#0d9488;">&#8592; Back to Board</button>
+            </div>
+
+            <form id="cheque-suit-form">
+                <!-- Section 1: Cheque and Transaction Details -->
+                <div class="card" style="border-top: 3px solid #0d9488; margin-bottom:20px;">
+                    <div class="card-header">
+                        <h3 style="display:flex; align-items:center; gap:6px;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0d9488" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                            <span>1. Dishonoured Cheque & Notice Details</span>
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
+                            <div class="form-group">
+                                <label>Case ID (Auto-Generated)</label>
+                                <input type="text" id="cheque-case-no" value="${chequeCaseNo}" readonly style="background:rgba(13,148,136,0.08); font-family:var(--font-mono); font-weight:700;">
+                            </div>
+                            <div class="form-group">
+                                <label>Cheque Number *</label>
+                                <input type="text" id="cheque-number" placeholder="6 Digit Number" required maxlength="6" class="code-font">
+                            </div>
+                            <div class="form-group">
+                                <label>Cheque Amount (₹) *</label>
+                                <input type="number" id="cheque-amount" placeholder="Cheque Value in INR" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Cheque Date *</label>
+                                <input type="date" id="cheque-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Bank Name *</label>
+                                <input type="text" id="cheque-bank" placeholder="Payee Bank Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>IFSC Code *</label>
+                                <input type="text" id="cheque-ifsc" placeholder="e.g. SBIN0000918" required maxlength="11" class="code-font">
+                            </div>
+                            <div class="form-group">
+                                <label>Date of Dishonour *</label>
+                                <input type="date" id="cheque-dishonour-date" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Dishonour Memo Reason *</label>
+                                <select id="cheque-dishonour-reason" required>
+                                    <option value="Funds Insufficient">Funds Insufficient</option>
+                                    <option value="Account Closed">Account Closed</option>
+                                    <option value="Refer to Drawer">Refer to Drawer</option>
+                                    <option value="Signature Mismatch / Differs">Signature Mismatch / Differs</option>
+                                    <option value="Stop Payment">Stop Payment</option>
+                                    <option value="Exceeds Arrangement">Exceeds Arrangement</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Next Hearing Date</label>
+                                <input type="date" id="cheque-hearing-date" value="${todayDate}">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-top:12px;">
+                            <label>Mandatory Plaint Synopsis (S.138 Supreme Court Mandate) *</label>
+                            <textarea id="cheque-synopsis" rows="3" placeholder="Provide summary of transaction, cheque dishonour, demand notices dates..." required style="resize:vertical;"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Complainant (Petitioner) Details -->
+                <div class="card" style="border-top: 3px solid #0d9488; margin-bottom:20px;">
+                    <div class="card-header">
+                        <h3 style="display:flex; align-items:center; gap:6px;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0d9488" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <span>2. Complainant (Payee) details</span>
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
+                            <div class="form-group">
+                                <label>Complainant Name *</label>
+                                <input type="text" id="cheque-pet-name" placeholder="Full Name / Org Name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Advocate Name</label>
+                                <input type="text" id="cheque-pet-advocate" placeholder="Advocate Bar Registration">
+                            </div>
+                            <div class="form-group">
+                                <label>Mobile Number *</label>
+                                <input type="text" id="cheque-pet-mobile" required maxlength="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Aadhaar Number (Optional)</label>
+                                <input type="text" id="cheque-pet-aadhaar" maxlength="12">
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label>Residential / Business Address *</label>
+                                <input type="text" id="cheque-pet-address" required placeholder="Full postal address">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Accused (Respondent) Details -->
+                <div class="card" style="border-top: 3px solid #0d9488; margin-bottom:20px;">
+                    <div class="card-header">
+                        <h3 style="display:flex; align-items:center; gap:6px;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0d9488" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            <span>3. Accused (Drawer) details</span>
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-grid" style="grid-template-columns: repeat(3, 1fr);">
+                            <div class="form-group">
+                                <label>Accused Name *</label>
+                                <input type="text" id="cheque-resp-name" placeholder="Full Name of Accused" required>
+                            </div>
+                            <div class="form-group">
+                                <label>WhatsApp Number * (For Electronic Summons)</label>
+                                <input type="text" id="cheque-resp-whatsapp" required placeholder="WhatsApp contact for summons" maxlength="10">
+                            </div>
+                            <div class="form-group">
+                                <label>Accused Email * (For Electronic Summons)</label>
+                                <input type="email" id="cheque-resp-email" required placeholder="Email address for summons">
+                            </div>
+                            <div class="form-group">
+                                <label>Advocate Name (If known)</label>
+                                <input type="text" id="cheque-resp-advocate" placeholder="Advocate name">
+                            </div>
+                            <div class="form-group" style="grid-column: span 2;">
+                                <label>Residential Address *</label>
+                                <input type="text" id="cheque-resp-address" required placeholder="Full residential address of accused">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Summoning & Verification affidavits -->
+                <div class="card" style="border-top: 3px solid #0d9488; margin-bottom:20px;">
+                    <div class="card-header">
+                        <h3 style="display:flex; align-items:center; gap:6px;">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0d9488" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <span>4. Summons Affidavits & Intake Verification</span>
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <div style="display:flex; flex-direction:column; gap:10px;">
+                            <label style="display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--color-text-main);">
+                                <input type="checkbox" id="cheque-affidavit-dasti" value="yes"> Complainant has filed Affidavit of Service for Dasti summmons verification
+                            </label>
+                            <label style="display:inline-flex; align-items:center; gap:8px; font-size:13px; color:var(--color-text-main);">
+                                <input type="checkbox" id="cheque-affidavit-digital" value="yes" checked disabled> Accused WhatsApp and Email details verified supported by affidavit u/s 64/530 BNSS
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="card" style="margin-bottom:20px;">
+                    <div class="card-body">
+                        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:8px;">
+                            <button type="button" class="btn btn-secondary" id="btn-cheque-reset" style="border-color:#0d9488; color:#0d9488;">Reset Form</button>
+                            <button type="submit" class="btn" id="btn-submit-cheque" style="background:linear-gradient(135deg,#0d9488,#14b8a6); color:#fff; font-weight:800; padding:12px 28px; border:none;">&#10003; Register Cheque Suit</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        `;
+
+        // Bind events
+        tabContent.querySelector('#btn-back-cheque').addEventListener('click', () => {
+            state.staffActiveTab = 'status';
+            onUpdate();
+        });
+
+        tabContent.querySelector('#btn-cheque-reset').addEventListener('click', () => {
+            tabContent.querySelector('#cheque-suit-form').reset();
+        });
+
+        tabContent.querySelector('#cheque-suit-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const caseId = tabContent.querySelector('#cheque-case-no').value;
+            const chequeNumber = tabContent.querySelector('#cheque-number').value;
+            const chequeAmount = parseFloat(tabContent.querySelector('#cheque-amount').value);
+            const chequeDate = tabContent.querySelector('#cheque-date').value;
+            const bankName = tabContent.querySelector('#cheque-bank').value;
+            const ifscCode = tabContent.querySelector('#cheque-ifsc').value;
+            const dishonourDate = tabContent.querySelector('#cheque-dishonour-date').value;
+            const dishonourReason = tabContent.querySelector('#cheque-dishonour-reason').value;
+            const hearingDate = tabContent.querySelector('#cheque-hearing-date').value;
+            const synopsis = tabContent.querySelector('#cheque-synopsis').value;
+
+            const petName = tabContent.querySelector('#cheque-pet-name').value;
+            const petAdvocate = tabContent.querySelector('#cheque-pet-advocate').value;
+            const petMobile = tabContent.querySelector('#cheque-pet-mobile').value;
+            const petAadhaar = tabContent.querySelector('#cheque-pet-aadhaar').value;
+            const petAddress = tabContent.querySelector('#cheque-pet-address').value;
+
+            const respName = tabContent.querySelector('#cheque-resp-name').value;
+            const respWhatsapp = tabContent.querySelector('#cheque-resp-whatsapp').value;
+            const respEmail = tabContent.querySelector('#cheque-resp-email').value;
+            const respAdvocate = tabContent.querySelector('#cheque-resp-advocate').value;
+            const respAddress = tabContent.querySelector('#cheque-resp-address').value;
+            
+            const isDastiServed = tabContent.querySelector('#cheque-affidavit-dasti').checked;
+
+            const newChequeCase = {
+                caseId,
+                case_id: caseId,
+                caseType: 'CHEQUE',
+                courtNumber: 'Special NI Act Court Room 1, Rajamundry',
+                presidingJudge: 'Hon\'ble K. Srinivas Rao',
+                filingDate: todayDate,
+                lastHearingDate: todayDate,
+                nextHearingDate: hearingDate,
+                pendingDays: 0,
+                orderStatus: 'PENDING',
+                chequeNumber,
+                chequeAmount,
+                chequeDate,
+                bankName,
+                ifscCode,
+                dishonourDate,
+                dishonourReason,
+                dastiStatus: isDastiServed ? 'SERVED' : 'PENDING',
+                electronicStatus: 'SENT',
+                electronicEmail: respEmail,
+                electronicWhatsapp: respWhatsapp,
+                affidavitUploaded: isDastiServed,
+                affidavitUrl: isDastiServed ? '/uploads/affidavit.pdf' : '',
+                qrCodeUrl: `upi://pay?pa=court.intake.rjm@upi&pn=Rajamundry%20Court%20Intake&am=${chequeAmount.toFixed(2)}&tr=${caseId}`,
+                paymentConfirmed: false,
+                paymentDate: '',
+                synopsisText: synopsis,
+                summaryTrialReasons: '',
+                q1_belongs_to_accused: 'PENDING',
+                q2_signature_is_yours: 'PENDING',
+                q3_delivered_to_complainant: 'PENDING',
+                q4_owed_liability: 'PENDING',
+                q5_defence_type: 'N/A',
+                q5_defence_details: '',
+                q6_wish_to_compound: 'PENDING',
+                responsesRecorded: false,
+                interimOrdered: false,
+                interimAmount: 0.0,
+                interimStatus: 'N/A',
+                petitioner: {
+                    name: petName,
+                    advocate: petAdvocate,
+                    mobileNumber: petMobile,
+                    aadhaar: petAadhaar,
+                    address: petAddress
+                },
+                respondent: {
+                    name: respName,
+                    advocate: respAdvocate,
+                    mobileNumber: respWhatsapp,
+                    aadhaar: '',
+                    address: respAddress
+                },
+                hearingHistory: [
+                    { date: todayDate, note: `NI Act Section 138 Plaint registered. Case ID allocated: ${caseId}.` }
+                ]
+            };
+
+            try {
+                const res = await fetch('/api/cheque-cases', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newChequeCase)
+                });
+                if (res.ok) {
+                    alert('Section 138 Cheque Dishonour Plaint registered successfully!');
+                    state.staffActiveTab = 'status';
+                    onUpdate();
+                } else {
+                    alert('Failed to register case with backend. Saving locally...');
+                    if (!state.chequeCases) state.chequeCases = [];
+                    state.chequeCases.unshift(newChequeCase);
+                    state.saveChequeDatabase();
+                    state.staffActiveTab = 'status';
+                    onUpdate();
+                }
+            } catch (e) {
+                console.error(e);
+                if (!state.chequeCases) state.chequeCases = [];
+                state.chequeCases.unshift(newChequeCase);
+                state.saveChequeDatabase();
+                state.staffActiveTab = 'status';
+                onUpdate();
+            }
+        });
+    },
+
     renderStatusBoard(tabContent, state, onUpdate) {
         // Calculate statistical numbers exactly matching mockup
         const totalCases = state.cases.length;
@@ -1024,6 +1330,10 @@ export const DashboardStaff = {
                     <button class="btn" id="btn-create-civil-suit" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,rgba(30,58,138,0.85),rgba(30,58,138,0.7)); color:#fff; border:1px solid #2563eb;">
                         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                         <span>File Civil Plaint</span>
+                    </button>
+                    <button class="btn" id="btn-create-cheque-case" style="font-weight:700; display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg,#0d9488,#14b8a6); color:#fff; border:1px solid #0d9488;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        <span>File Cheque Case</span>
                     </button>
                 </div>
             </div>
@@ -1113,6 +1423,50 @@ export const DashboardStaff = {
                     </div>
                 </div>
             </div>
+
+            <!-- cheque plaints SECTION -->
+            <div style="margin-top:30px; margin-bottom:40px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <h3 style="font-size:16px; font-weight:800; color:#0d9488; display:flex; align-items:center; gap:8px;">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="color:#0d9488;"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                        Cheque Dishonour Plaint Cases (Section 138 NI Act)
+                        <span style="font-size:11px; font-weight:700; background:rgba(13,148,136,0.15); color:#0d9488; padding:2px 8px; border-radius:10px; border:1px solid rgba(13,148,136,0.3);">${(state.chequeCases||[]).length} Cases</span>
+                    </h3>
+                </div>
+                <div class="table-card-mock">
+                    <div class="data-table-wrapper">
+                        <table class="mock-table">
+                            <thead>
+                                <tr>
+                                    <th>Case ID</th>
+                                    <th>Cheque details</th>
+                                    <th>Complainant</th>
+                                    <th>Accused</th>
+                                    <th>Summons service</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${(state.chequeCases||[]).length === 0
+                                    ? '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--color-text-muted);">No cheque plaints registered yet. Click "File Cheque Case" to add one.</td></tr>'
+                                    : (state.chequeCases||[]).map(cs => `
+                                <tr style="cursor:default;">
+                                    <td class="case-no-cell" style="color:#0d9488;">${cs.caseId || cs.case_id || '-'}</td>
+                                    <td><div style="font-weight:700; color:#10b981;">₹${(cs.chequeAmount || 0).toLocaleString('en-IN')}</div><div style="font-size:10px; color:var(--color-text-muted);">No. ${cs.chequeNumber || '-'} &bull; ${cs.bankName || '-'}</div></td>
+                                    <td><div style="font-weight:600;">${cs.petitioner?.name || '-'}</div></td>
+                                    <td><div style="font-weight:600;">${cs.respondent?.name || '-'}</div></td>
+                                    <td style="font-size:11px;">
+                                        <div>Dasti: <strong>${cs.dastiStatus || 'PENDING'}</strong></div>
+                                        <div>Electronic: <strong>${cs.electronicStatus || 'SENT'}</strong></div>
+                                    </td>
+                                    <td><span class="status-indicator-mock ${cs.orderStatus === 'PENDING' ? 'checking' : cs.orderStatus === 'COMPOUNDED' ? 'ready' : cs.orderStatus === 'SUMMONS_ISSUED' ? 'checking' : 'alert'}">${cs.orderStatus || 'PENDING'}</span></td>
+                                </tr>`).join('')
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         `;
 
         // Bind table row clicks -> criminal bail report viewer
@@ -1140,6 +1494,15 @@ export const DashboardStaff = {
         if (civilBtn) {
             civilBtn.addEventListener('click', () => {
                 state.staffActiveTab = 'civil_register';
+                onUpdate();
+            });
+        }
+
+        // File Cheque Plaint button
+        const chequeBtn = tabContent.querySelector('#btn-create-cheque-case');
+        if (chequeBtn) {
+            chequeBtn.addEventListener('click', () => {
+                state.staffActiveTab = 'cheque_register';
                 onUpdate();
             });
         }

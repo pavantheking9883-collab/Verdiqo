@@ -8,6 +8,7 @@ import { VerificationEngine } from './utils/verificationEngine.js';
 import { DashboardStaff } from './components/DashboardStaff.js';
 import { DashboardJudge } from './components/DashboardJudge.js';
 import { DashboardCivilJudge } from './components/DashboardCivilJudge.js';
+import { DashboardChequeJudge } from './components/DashboardChequeJudge.js';
 import { DashboardAdmin } from './components/DashboardAdmin.js';
 import { DashboardCitizen } from './components/DashboardCitizen.js';
 import { ReportViewer } from './components/ReportViewer.js';
@@ -740,9 +741,11 @@ class ApplicationState {
         this.currentUser = null; // Active logged-in user object
         this.cases = [];
         this.civilCases = [];
+        this.chequeCases = [];
         this.staffActiveTab = 'status'; // Status Board is default tab to match reference mockup
         this.selectedCaseNumber = null;
         this.selectedCivilCaseId = null;
+        this.selectedChequeCaseId = null;
         this.judgeViewMode = 'CRIMINAL'; // 'CRIMINAL' | 'CIVIL' — active docket tab in judge view
         this.citizenSearchQuery = '';
         this.citizenActiveMobileTab = 'home';
@@ -753,6 +756,7 @@ class ApplicationState {
         
         this.initDatabase();
         this.initCivilDatabase();
+        this.initChequeDatabase();
         this.syncWithCloudBackend();
     }
 
@@ -858,6 +862,17 @@ class ApplicationState {
                     localStorage.setItem('verdiqo_civil_db', JSON.stringify(this.civilCases));
                 }
             }
+
+            // Fetch cheque cases
+            const resCheque = await fetch('/api/cheque-cases');
+            if (resCheque.ok) {
+                const cloudCheque = await resCheque.json();
+                if (cloudCheque && cloudCheque.length > 0) {
+                    this.chequeCases = cloudCheque;
+                    localStorage.setItem('verdiqo_cheque_db', JSON.stringify(this.chequeCases));
+                }
+            }
+
             console.log('[Verdiqo] Synchronized successfully with Neon Postgres cloud backend!');
             if (window.updateUI) window.updateUI();
         } catch (e) {
@@ -897,7 +912,7 @@ class ApplicationState {
         if (parsedCache && parsedCache.length > 0) {
             this.civilCases = parsedCache;
         } else {
-            this.civilCases = JSON.parse(JSON.stringify(CIVIL_CASES_DATABASE));
+            this.civilCases = [];
             this.saveCivilDatabase();
         }
     }
@@ -917,6 +932,43 @@ class ApplicationState {
             }
         } catch (e) {
             console.warn('[Verdiqo] Failed to push civil case updates to backend API:', e);
+        }
+    }
+
+    initChequeDatabase() {
+        const CHEQUE_DB_VERSION = 'v1-cheque-only';
+        const cached = localStorage.getItem('verdiqo_cheque_db');
+        const cachedVersion = localStorage.getItem('verdiqo_cheque_db_version');
+
+        let parsedCache = null;
+        if (cached && cachedVersion === CHEQUE_DB_VERSION) {
+            parsedCache = JSON.parse(cached);
+            parsedCache = parsedCache.filter(c => c.caseId && c.caseId.startsWith('CC-'));
+        }
+
+        if (parsedCache && parsedCache.length > 0) {
+            this.chequeCases = parsedCache;
+        } else {
+            this.chequeCases = [];
+            this.saveChequeDatabase();
+        }
+    }
+
+    async saveChequeDatabase() {
+        localStorage.setItem('verdiqo_cheque_db_version', 'v1-cheque-only');
+        const chequeOnly = this.chequeCases.filter(c => c.caseId && c.caseId.startsWith('CC-'));
+        localStorage.setItem('verdiqo_cheque_db', JSON.stringify(chequeOnly));
+
+        try {
+            for (const c of chequeOnly) {
+                await fetch('/api/cheque-cases', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(c)
+                });
+            }
+        } catch (e) {
+            console.warn('[Verdiqo] Failed to push cheque case updates to backend API:', e);
         }
     }
 
@@ -947,6 +999,12 @@ class ApplicationState {
                 this.currentUser = { name: 'Hon\'ble B. Surya Prakash Rao', role: 'CIVIL_JUDGE', designation: 'Principal Civil Judge (Junior Division)', court: 'Civil Court Room 1, Rajamundry' };
                 return true;
             }
+        } else if (role === 'CHEQUE_JUDGE') {
+            // Special Magistrate (NI Act) — handles Section 138 Cheque cases
+            if (username === 'judge_srinivas' || username === 'chequejudge1') {
+                this.currentUser = { name: 'Hon\'ble K. Srinivas Rao', role: 'CHEQUE_JUDGE', designation: 'Special Judicial Magistrate (NI Act)', court: 'Special NI Act Court, Rajamundry' };
+                return true;
+            }
         } else if (role === 'ADMIN') {
             if (username === 'admin_prasad' || username === 'admin1') {
                 this.currentUser = { name: 'K. Prasad Rao', role: 'ADMIN', designation: 'District Head Judge', court: 'East Godavari Judicial Division' };
@@ -967,6 +1025,7 @@ class ApplicationState {
         this.selectedCaseNumber = null;
         this.citizenSearchQuery = '';
         this.citizenActiveMobileTab = 'home';
+        window.currentPortalView = 'none';
     }
 
     openReportViewer(caseRecord, forceReportId = null) {
@@ -1108,6 +1167,9 @@ function updateUI() {
     } else if (activeRole === 'CIVIL_JUDGE') {
         // Civil Court Judge — Civil Plaint suits only
         DashboardCivilJudge.render(mountPoint, AppState, updateUI);
+    } else if (activeRole === 'CHEQUE_JUDGE') {
+        // Special Magistrate (NI Act) — Section 138 Cheque cases only
+        DashboardChequeJudge.render(mountPoint, AppState, updateUI);
     } else if (activeRole === 'ADMIN') {
         DashboardAdmin.render(mountPoint, AppState, updateUI);
     } else if (activeRole === 'CITIZEN') {
@@ -1116,44 +1178,176 @@ function updateUI() {
     window.updateUI = updateUI;
 }
 
-function renderLoginPortal(root) {
-    let selectedRole = 'STAFF';
-    
-    const drawForm = () => {
-        let inputFields = '';
-        let defaultUser = 'staff_rajamundry';
-        let defaultPass = 'court123';
-        if (selectedRole === 'JUDGE') {
-            defaultUser = 'judge_kameswara';
-            defaultPass = 'justice789';
-        } else if (selectedRole === 'CIVIL_JUDGE') {
-            defaultUser = 'judge_suryaprakash';
-            defaultPass = 'civil456';
-        } else if (selectedRole === 'ADMIN') {
-            defaultUser = 'admin_prasad';
-            defaultPass = 'district456';
-        }
 
-        if (selectedRole === 'CITIZEN') {
-            inputFields = `
-                <div class="form-group">
-                    <label>Aadhaar / Case Number</label>
-                    <input type="text" class="form-input code-font" id="login-username" required placeholder="Aadhaar or Case No." value="BMS/2026/0042">
-                </div>
-                <div class="form-group">
-                    <label>OTP Verification</label>
-                    <input type="password" class="form-input code-font" id="login-password" required value="123456" disabled>
+
+function renderLoginPortal(root) {
+    if (!window.currentPortalView) {
+        window.currentPortalView = 'none';
+    }
+    
+    let selectedRole = 'STAFF';
+    if (window.currentPortalView === 'citizen') {
+        selectedRole = 'CITIZEN';
+    }
+
+    const drawForm = () => {
+        let cardContent = '';
+
+        if (window.currentPortalView === 'none') {
+            cardContent = `
+                <div class="login-card" style="max-width: 760px; width: 100%; border: 1px solid var(--color-border); box-shadow: 0 15px 35px rgba(0,0,0,0.4); background: var(--color-card-dark);">
+                    <div class="login-header" style="padding: 40px 20px; border-bottom: 1px solid var(--color-border);">
+                        <h2 style="font-size: 26px; font-weight: 800; color: var(--color-gold-light); margin-bottom: 8px;">VERDIQO SECURE GATEWAY</h2>
+                        <p style="color: var(--color-text-muted); font-size: 13.5px; margin: 0;">Select your service portal to access the smart adjudication registry</p>
+                    </div>
+                    <div class="login-body" style="padding: 30px;">
+                        <div class="grid-cols-2" style="gap: 24px;">
+                            <!-- Gateway 1: Court Officials -->
+                            <div class="card gateway-card" id="gateway-court" style="cursor:pointer; border:1px solid var(--color-border); border-radius:10px; padding: 24px; text-align:center; background: var(--color-table-header); transition: all 0.2s ease;">
+                                <div style="font-size: 36px; margin-bottom: 14px;">⚖️</div>
+                                <h3 style="font-size:18px; font-weight:700; color:var(--color-text-main); margin-bottom:8px;">Court Officials Gateway</h3>
+                                <p style="font-size:12.5px; color:var(--color-text-muted); line-height:1.5; min-height: 60px; margin: 0;">Access case ledgers, sessions bail dockets, civil plaints, electronic summons verification, and analytics dashboards.</p>
+                                <button class="btn btn-primary" style="margin-top: 16px; width: 100%; pointer-events: none;">Enter Official Portal</button>
+                            </div>
+                            
+                            <!-- Gateway 2: Citizen Services -->
+                            <div class="card gateway-card" id="gateway-citizen" style="cursor:pointer; border:1px solid var(--color-border); border-radius:10px; padding: 24px; text-align:center; background: var(--color-table-header); transition: all 0.2s ease;">
+                                <div style="font-size: 36px; margin-bottom: 14px;">👤</div>
+                                <h3 style="font-size:18px; font-weight:700; color:var(--color-text-main); margin-bottom:8px;">Citizen Services Portal</h3>
+                                <p style="font-size:12.5px; color:var(--color-text-muted); line-height:1.5; min-height: 60px; margin: 0;">Track case applications, lookup bail/civil outcomes, verify summons, and settle cheque disputes under Sec. 147 NI Act.</p>
+                                <button class="btn btn-success" style="margin-top: 16px; width: 100%; pointer-events: none;">Enter Citizen Services</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
         } else {
-            inputFields = `
-                <div class="form-group">
-                    <label>System Username</label>
-                    <input type="text" class="form-input code-font" id="login-username" required value="${defaultUser}">
-                </div>
-                <div class="form-group">
-                    <label>Access Password</label>
-                    <input type="password" class="form-input code-font" id="login-password" required value="${defaultPass}">
+            // Standard login layout based on selected portal
+            let inputFields = '';
+            let defaultUser = 'staff_rajamundry';
+            let defaultPass = 'court123';
+            if (selectedRole === 'JUDGE') {
+                defaultUser = 'judge_kameswara';
+                defaultPass = 'justice789';
+            } else if (selectedRole === 'CIVIL_JUDGE') {
+                defaultUser = 'judge_suryaprakash';
+                defaultPass = 'civil456';
+            } else if (selectedRole === 'CHEQUE_JUDGE') {
+                defaultUser = 'judge_srinivas';
+                defaultPass = 'cheque123';
+            } else if (selectedRole === 'ADMIN') {
+                defaultUser = 'admin_prasad';
+                defaultPass = 'district456';
+            }
+
+            if (selectedRole === 'CITIZEN') {
+                inputFields = `
+                    <div class="form-group">
+                        <label>Aadhaar / Case Number</label>
+                        <input type="text" class="form-input code-font" id="login-username" required placeholder="Aadhaar or Case No." value="BMS/2026/0042">
+                    </div>
+                    <div class="form-group">
+                        <label>OTP Verification</label>
+                        <input type="password" class="form-input code-font" id="login-password" required value="123456" disabled>
+                    </div>
+                `;
+            } else {
+                inputFields = `
+                    <div class="form-group">
+                        <label>System Username</label>
+                        <input type="text" class="form-input code-font" id="login-username" required value="${defaultUser}">
+                    </div>
+                    <div class="form-group">
+                        <label>Access Password</label>
+                        <input type="password" class="form-input code-font" id="login-password" required value="${defaultPass}">
+                    </div>
+                `;
+            }
+
+            let selectorHtml = '';
+            if (window.currentPortalView === 'court') {
+                selectorHtml = `
+                    <div class="role-selector-grid" style="grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px;">
+                        <div class="role-option ${selectedRole === 'STAFF' ? 'active' : ''}" data-role="STAFF">
+                            <div class="gov-emblem-badge" style="margin-bottom:8px;">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                            </div>
+                            <span>Court Staff</span>
+                        </div>
+                        <div class="role-option ${selectedRole === 'JUDGE' ? 'active' : ''}" data-role="JUDGE" style="border-color: ${selectedRole === 'JUDGE' ? 'var(--color-gold)' : 'transparent'}; position:relative;">
+                            <div style="position:absolute; top:6px; right:6px; font-size:8px; font-weight:800; letter-spacing:0.5px; color:var(--color-danger); background:rgba(239,68,68,0.1); padding:1px 5px; border-radius:3px; border:1px solid rgba(239,68,68,0.3);">CRIMINAL</div>
+                            <div class="gov-emblem-badge" style="margin-bottom:8px;">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><path d="M12 2v20M5 7h14M5 7L3 13h4L5 7zm14 0l-2 6h4l-2-6zM12 22h6M12 22H6"/></svg>
+                            </div>
+                            <span>Sessions Judge</span>
+                        </div>
+                        <div class="role-option ${selectedRole === 'CIVIL_JUDGE' ? 'active' : ''}" data-role="CIVIL_JUDGE" style="position:relative; border-color:${selectedRole === 'CIVIL_JUDGE' ? '#2563eb' : 'transparent'};">
+                            <div style="position:absolute; top:6px; right:6px; font-size:8px; font-weight:800; letter-spacing:0.5px; color:#2563eb; background:rgba(30,58,138,0.1); padding:1px 5px; border-radius:3px; border:1px solid rgba(30,58,138,0.3);">CIVIL</div>
+                            <div class="gov-emblem-badge" style="margin-bottom:8px;">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color:#2563eb;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                            </div>
+                            <span>Civil Judge</span>
+                        </div>
+                        <div class="role-option ${selectedRole === 'CHEQUE_JUDGE' ? 'active' : ''}" data-role="CHEQUE_JUDGE" style="position:relative; border-color:${selectedRole === 'CHEQUE_JUDGE' ? '#0d9488' : 'transparent'};">
+                            <div style="position:absolute; top:6px; right:6px; font-size:8px; font-weight:800; letter-spacing:0.5px; color:#0d9488; background:rgba(13,148,136,0.1); padding:1px 5px; border-radius:3px; border:1px solid rgba(13,148,136,0.3);">NI ACT</div>
+                            <div class="gov-emblem-badge" style="margin-bottom:8px;">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#0d9488" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                            </div>
+                            <span>NI Magistrate</span>
+                        </div>
+                        <div class="role-option ${selectedRole === 'ADMIN' ? 'active' : ''}" data-role="ADMIN">
+                            <div class="gov-emblem-badge" style="margin-bottom:8px;">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                            </div>
+                            <span>District Head Judge</span>
+                        </div>
+                    </div>
+                `;
+            } else {
+                selectorHtml = `
+                    <div class="role-selector-grid" style="grid-template-columns: 1fr; margin-bottom: 20px;">
+                        <div class="role-option active" data-role="CITIZEN" style="cursor:default; max-width: 240px; margin: 0 auto;">
+                            <div class="gov-emblem-badge" style="margin-bottom:8px;">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                            </div>
+                            <span>Citizen Portal Services</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            cardContent = `
+                <div class="login-card" style="max-width: 480px; width: 100%; border: 1px solid var(--color-border); box-shadow: 0 15px 35px rgba(0,0,0,0.4); background: var(--color-card-dark);">
+                    <div class="login-header" style="border-bottom: 1px solid var(--color-border); padding: 24px 20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <button id="btn-portal-back" class="btn btn-secondary" style="font-size:11px; padding:6px 12px; border-color:var(--color-border); color:var(--color-text-muted); background:transparent;">↩ Back</button>
+                            <h2 style="font-size: 20px; color: var(--color-gold-light); font-weight: 750; margin: 0; text-transform: uppercase;">
+                                ${window.currentPortalView === 'court' ? 'Official Login' : 'Citizen Gateway'}
+                            </h2>
+                            <div style="width:50px;"></div>
+                        </div>
+                    </div>
+                    <div class="login-body" style="padding: 24px;">
+                        ${selectorHtml}
+                        
+                        <form id="login-form-submit">
+                            ${inputFields}
+                            <button type="submit" class="login-btn" style="margin-top:20px; display:flex; align-items:center; justify-content:center; gap:6px; width:100%;">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle;"><polyline points="20 6 9 17 4 12"/></svg>
+                                <span>Cryptographic Login Verification</span>
+                            </button>
+                        </form>
+                        
+                        <div class="credential-tip" style="margin-top: 16px; padding: 12px; font-size:11px;">
+                            <strong>Pre-defined Credentials:</strong>
+                            ${selectedRole === 'STAFF' ? '<p>User: staff_rajamundry | Pass: court123</p>' : ''}
+                            ${selectedRole === 'JUDGE' ? '<p>User: judge_kameswara | Pass: justice789</p>' : ''}
+                            ${selectedRole === 'CIVIL_JUDGE' ? '<p>User: judge_suryaprakash | Pass: civil456</p>' : ''}
+                            ${selectedRole === 'CHEQUE_JUDGE' ? '<p>User: judge_srinivas | Pass: cheque123</p>' : ''}
+                            ${selectedRole === 'ADMIN' ? '<p>User: admin_prasad | Pass: district456</p>' : ''}
+                            ${selectedRole === 'CITIZEN' ? '<p>Case Number: BMS/2026/0042 (OTP: 123456)</p>' : ''}
+                        </div>
+                    </div>
                 </div>
             `;
         }
@@ -1164,18 +1358,15 @@ function renderLoginPortal(root) {
                     <div class="brand-section">
                         <div class="brand-logo-box">⚖️</div>
                         <div class="brand-titles">
-                            <h1>Bail Management System</h1>
+                            <h1>Verdiqo Unified Adjudication Suite</h1>
                             <p>QUANTEX INTELLIGENCE SYSTEMS</p>
                         </div>
                     </div>
                     <div class="nav-buttons-container">
-                        <!-- Bilingual Language Switcher (EN / HI) -->
                         <button class="theme-toggle-btn-mock" id="global-lang-toggle-login" title="Switch Language (🌐 EN / HI)" style="width: 58px; font-size: 11.5px; font-weight: 800; font-family: var(--font-mono); color: var(--color-gold-light); display: inline-flex; align-items: center; justify-content: center; gap: 4px; margin-right: 8px;">
                             <span>🌐</span>
                             <span>${AppState.language}</span>
                         </button>
-
-                        <!-- Theme Toggler in secure login header (Sun / Moon SVG) -->
                         <button class="theme-toggle-btn-mock" id="global-theme-toggle-login" title="Toggle Light/Dark Theme">
                             ${AppState.theme === 'dark' 
                                 ? `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#2563eb" stroke-width="2.5" style="vertical-align:middle;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>` 
@@ -1184,78 +1375,72 @@ function renderLoginPortal(root) {
                     </div>
                 </header>
                 
-                <div class="login-container">
-                    <div class="login-card">
-                        <div class="login-header">
-                            <h2>VERDIQO SECURE LOGIN</h2>
-                            <p>Quantex Adjudication Systems Portal</p>
-                        </div>
-                        <div class="login-body">
-                            <div class="role-selector-grid" style="grid-template-columns: repeat(3, 1fr);">
-                                <div class="role-option ${selectedRole === 'STAFF' ? 'active' : ''}" data-role="STAFF">
-                                    <div class="gov-emblem-badge" style="margin-bottom:8px;">
-                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                    </div>
-                                    <span>Court Staff</span>
-                                </div>
-                                <div class="role-option ${selectedRole === 'JUDGE' ? 'active' : ''}" data-role="JUDGE" style="border-color: ${selectedRole === 'JUDGE' ? 'var(--color-gold)' : 'transparent'}; position:relative;">
-                                    <div style="position:absolute; top:6px; right:6px; font-size:8px; font-weight:800; letter-spacing:0.5px; color:var(--color-danger); background:rgba(239,68,68,0.1); padding:1px 5px; border-radius:3px; border:1px solid rgba(239,68,68,0.3);">CRIMINAL</div>
-                                    <div class="gov-emblem-badge" style="margin-bottom:8px;">
-                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><path d="M12 2v20M5 7h14M5 7L3 13h4L5 7zm14 0l-2 6h4l-2-6zM12 22h6M12 22H6"/></svg>
-                                    </div>
-                                    <span>Sessions Judge</span>
-                                    <small style="font-size:9px; color:var(--color-text-muted); display:block; margin-top:2px;">Bail Applications</small>
-                                </div>
-                                <div class="role-option ${selectedRole === 'CIVIL_JUDGE' ? 'active' : ''}" data-role="CIVIL_JUDGE" style="position:relative;">
-                                    <div style="position:absolute; top:6px; right:6px; font-size:8px; font-weight:800; letter-spacing:0.5px; color:#2563eb; background:rgba(30,58,138,0.1); padding:1px 5px; border-radius:3px; border:1px solid rgba(30,58,138,0.3);">CIVIL</div>
-                                    <div class="gov-emblem-badge" style="margin-bottom:8px; border-color:${selectedRole === 'CIVIL_JUDGE' ? '#2563eb' : 'transparent'};">
-                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color:#2563eb;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                                    </div>
-                                    <span>Civil Judge</span>
-                                    <small style="font-size:9px; color:var(--color-text-muted); display:block; margin-top:2px;">Civil Plaint</small>
-                                </div>
-                                <div class="role-option ${selectedRole === 'ADMIN' ? 'active' : ''}" data-role="ADMIN">
-                                    <div class="gov-emblem-badge" style="margin-bottom:8px;">
-                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-                                    </div>
-                                    <span>District Head Judge</span>
-                                </div>
-                                <div class="role-option ${selectedRole === 'CITIZEN' ? 'active' : ''}" data-role="CITIZEN">
-                                    <div class="gov-emblem-badge" style="margin-bottom:8px;">
-                                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--color-gold);"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                                    </div>
-                                    <span>Citizen Tracking</span>
-                                </div>
-                            </div>
-                            
-                            <form id="login-form-submit">
-                                ${inputFields}
-                                <button type="submit" class="login-btn" style="margin-top:20px; display:flex; align-items:center; justify-content:center; gap:6px; width:100%;">
-                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" style="vertical-align:middle;"><polyline points="20 6 9 17 4 12"/></svg>
-                                    <span>Cryptographic Login Verification</span>
-                                </button>
-                            </form>
-                            
-                            <div class="credential-tip">
-                                <strong>Pre-defined Sandboxed Login Credentials:</strong>
-                                ${selectedRole === 'STAFF' ? '<p>User: staff_rajamundry | Pass: court123</p>' : ''}
-                                ${selectedRole === 'JUDGE' ? '<p>User: judge_kameswara | Pass: justice789</p><p style="font-size:11px; color:var(--color-text-muted);">Sessions Court &mdash; Criminal Bail Applications</p>' : ''}
-                                ${selectedRole === 'CIVIL_JUDGE' ? '<p>User: judge_suryaprakash | Pass: civil456</p><p style="font-size:11px; color:var(--color-text-muted);">Civil Court &mdash; Civil Plaint Suits</p>' : ''}
-                                ${selectedRole === 'ADMIN' ? '<p>User: admin_prasad | Pass: district456</p>' : ''}
-                                ${selectedRole === 'CITIZEN' ? '<p>Aadhaar / Case Number: BMS/2026/0042 (OTP: 123456)</p>' : ''}
-                            </div>
-                        </div>
-                    </div>
+                <div class="login-container" style="background-image: linear-gradient(rgba(5, 12, 22, 0.6), rgba(5, 12, 22, 0.6)), url('/supreme_court.png'); background-size: cover; background-position: center; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;">
+                    ${cardContent}
                 </div>
             </div>
         `;
 
-        root.querySelectorAll('.role-option').forEach(opt => {
-            opt.addEventListener('click', (e) => {
-                selectedRole = e.currentTarget.getAttribute('data-role');
+        // Bind events if in gateway choice screen
+        if (window.currentPortalView === 'none') {
+            root.querySelector('#gateway-court').addEventListener('click', () => {
+                window.currentPortalView = 'court';
+                selectedRole = 'STAFF';
                 drawForm();
             });
-        });
+
+            root.querySelector('#gateway-citizen').addEventListener('click', () => {
+                window.currentPortalView = 'citizen';
+                selectedRole = 'CITIZEN';
+                drawForm();
+            });
+
+            // hover effect bindings
+            const cards = root.querySelectorAll('.gateway-card');
+            cards.forEach(c => {
+                c.addEventListener('mouseenter', () => {
+                    c.style.transform = 'translateY(-4px)';
+                    c.style.boxShadow = '0 8px 24px rgba(212,163,89,0.15)';
+                    c.style.borderColor = 'var(--color-gold)';
+                });
+                c.addEventListener('mouseleave', () => {
+                    c.style.transform = 'translateY(0)';
+                    c.style.boxShadow = 'none';
+                    c.style.borderColor = 'var(--color-border)';
+                });
+            });
+        } else {
+            // back button
+            const backBtn = root.querySelector('#btn-portal-back');
+            if (backBtn) {
+                backBtn.addEventListener('click', () => {
+                    window.currentPortalView = 'none';
+                    drawForm();
+                });
+            }
+
+            // role select option clicks
+            root.querySelectorAll('.role-option').forEach(opt => {
+                opt.addEventListener('click', (e) => {
+                    selectedRole = e.currentTarget.getAttribute('data-role');
+                    drawForm();
+                });
+            });
+
+            // form submission
+            root.querySelector('#login-form-submit').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const u = root.querySelector('#login-username').value;
+                const p = root.querySelector('#login-password').value;
+                
+                const success = AppState.login(selectedRole, u, p);
+                if (success) {
+                    updateUI();
+                } else {
+                    alert('Access Denied. Signature verification mismatch.');
+                }
+            });
+        }
 
         root.querySelector('#global-lang-toggle-login').addEventListener('click', () => {
             AppState.setLanguage(AppState.language === 'EN' ? 'HI' : 'EN');
@@ -1265,19 +1450,6 @@ function renderLoginPortal(root) {
         root.querySelector('#global-theme-toggle-login').addEventListener('click', () => {
             AppState.toggleTheme();
             drawForm();
-        });
-
-        root.querySelector('#login-form-submit').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const u = root.querySelector('#login-username').value;
-            const p = root.querySelector('#login-password').value;
-            
-            const success = AppState.login(selectedRole, u, p);
-            if (success) {
-                updateUI();
-            } else {
-                alert('Access Denied. Signature verification mismatch.');
-            }
         });
     };
 

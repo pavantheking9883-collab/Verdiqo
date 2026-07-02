@@ -581,7 +581,7 @@ body.light-theme .login-header h2 {
   color: var(--color-text-muted);
 }
 
-.form-input, input, select, textarea {
+.form-input, input:not([type="checkbox"]):not([type="radio"]), select, textarea {
   width: 100%;
   padding: 10px 14px;
   font-size: 15px;
@@ -592,6 +592,13 @@ body.light-theme .login-header h2 {
   outline: none;
   font-family: var(--font-body);
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, box-shadow 0.2s ease;
+}
+
+input[type="checkbox"], input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: #0d9488;
 }
 
 .form-input:focus, input:focus, select:focus, textarea:focus {

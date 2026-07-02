@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../models/case_model.dart';
+import '../models/civil_case_model.dart';
 
 class ApiService {
   static String get baseUrl {
@@ -93,6 +94,65 @@ class ApiService {
       return res.statusCode == 200;
     } catch (e) {
       debugPrint('API Error on updateVerdict: $e');
+      return false;
+    }
+  }
+
+  // Get Civil Cases Request
+  static Future<List<CivilCaseModel>> fetchCivilCases() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/civil-cases'));
+      if (res.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(res.body);
+        return data.map((json) => CivilCaseModel.fromJson(json)).toList();
+      }
+      throw Exception('Failed to load civil cases');
+    } catch (e) {
+      debugPrint('API Error on fetchCivilCases: $e');
+      rethrow;
+    }
+  }
+
+  // Post Civil Case Request
+  static Future<CivilCaseModel> createCivilCase(CivilCaseModel c) async {
+    try {
+      final res = await http.post(
+        Uri.parse('$baseUrl/civil-cases'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(c.toJson()),
+      );
+      if (res.statusCode == 201) {
+        return CivilCaseModel.fromJson(jsonDecode(res.body));
+      }
+      throw Exception('Failed to create civil case');
+    } catch (e) {
+      debugPrint('API Error on createCivilCase: $e');
+      rethrow;
+    }
+  }
+
+  // Put Civil Case Verdict Request
+  static Future<bool> updateCivilVerdict(
+    String caseId,
+    String verdict,
+    String decreeText,
+    String remarks,
+    String signature,
+  ) async {
+    try {
+      final res = await http.put(
+        Uri.parse('$baseUrl/civil-cases/$caseId/verdict'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'verdict': verdict,
+          'decreeText': decreeText,
+          'remarks': remarks,
+          'signature': signature,
+        }),
+      );
+      return res.statusCode == 200;
+    } catch (e) {
+      debugPrint('API Error on updateCivilVerdict: $e');
       return false;
     }
   }

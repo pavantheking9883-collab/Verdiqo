@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_state.dart';
 import '../models/case_model.dart';
+import '../models/civil_case_model.dart';
 
 class DashboardStaff extends StatefulWidget {
   const DashboardStaff({super.key});
@@ -134,6 +135,13 @@ class _DashboardStaffState extends State<DashboardStaff> {
       'prepopulate_capable': 'Autofill Capable Surety',
       'prepopulate_risk': 'Autofill High Risk Profile',
       'submit': 'Submit Bail Application',
+      'new_civil': 'New Civil Plaint',
+      'civil_case_type': 'Type of Civil Suit',
+      'civil_petitioner': 'Petitioner Details',
+      'civil_respondent': 'Respondent Details',
+      'civil_property': 'Subject Matter / Property Details',
+      'civil_relief': 'Relief Sought',
+      'submit_civil': 'File Civil Plaint',
       'logout': 'LOGOUT',
       'search': 'Search cases by name or number...',
     },
@@ -432,6 +440,7 @@ class _DashboardStaffState extends State<DashboardStaff> {
               children: [
                 _buildTabButton('status', text['status_board']!, appState),
                 _buildTabButton('new_app', text['new_application']!, appState),
+                _buildTabButton('new_civil', text['new_civil']!, appState),
               ],
             ),
           ),
@@ -439,7 +448,9 @@ class _DashboardStaffState extends State<DashboardStaff> {
           Expanded(
             child: appState.staffActiveTab == 'status'
                 ? _buildStatusBoard(appState, text, isDark)
-                : _buildNewApplicationForm(appState, text, isDark),
+                : appState.staffActiveTab == 'new_civil'
+                    ? _buildNewCivilPlaintForm(appState, text, isDark)
+                    : _buildNewApplicationForm(appState, text, isDark),
           ),
         ],
       ),
@@ -938,6 +949,407 @@ class _DashboardStaffState extends State<DashboardStaff> {
       ),
     );
   }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // NEW CIVIL PLAINT FORM
+  // ──────────────────────────────────────────────────────────────────────────
+
+  final _civilCaseIdController = TextEditingController();
+  final _civilTypeController = TextEditingController();
+  final _civilCourtController = TextEditingController(text: 'Civil Court Room 1, Rajamundry');
+  final _civilJudgeController = TextEditingController(text: "Hon'ble J. Kameswara Rao");
+  final _civilNextHearingController = TextEditingController();
+
+  final _civilPetNameController = TextEditingController();
+  final _civilPetAdvocateController = TextEditingController();
+  final _civilPetAddressController = TextEditingController();
+  final _civilPetAadhaarController = TextEditingController();
+  final _civilPetMobileController = TextEditingController();
+
+  final _civilRespNameController = TextEditingController();
+  final _civilRespAdvocateController = TextEditingController();
+  final _civilRespAddressController = TextEditingController();
+  final _civilRespAadhaarController = TextEditingController();
+  final _civilRespMobileController = TextEditingController();
+
+  final _civilPropertyController = TextEditingController();
+  final _civilReliefController = TextEditingController();
+
+  bool _civilSubmitting = false;
+
+  static const _civilTypeOptions = [
+    'Property Dispute',
+    'Money Recovery Suit',
+    'Injunction Suit',
+    'Partition Suit',
+    'Specific Performance',
+    'Declaration Suit',
+    'Matrimonial / Divorce',
+    'Probate / Succession',
+    'Other Civil Matter',
+  ];
+
+  static const _royalBlue2 = Color(0xFF2563EB);
+  static const _darkBg2 = Color(0xFF0F172A);
+  static const _darkCard2 = Color(0xFF1E293B);
+  static const _darkBorder2 = Color(0xFF334155);
+  static const _darkText2 = Color(0xFFF1F5F9);
+  static const _mutedText2 = Color(0xFF94A3B8);
+
+  Widget _buildNewCivilPlaintForm(AppState appState, Map<String, String> text, bool isDark) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  _royalBlue2.withOpacity(0.15),
+                  _royalBlue2.withOpacity(0.05),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: _royalBlue2.withOpacity(0.4)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _royalBlue2.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.description_outlined, color: _royalBlue2, size: 24),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'File New Civil Plaint',
+                        style: TextStyle(
+                          color: _darkText2,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Register a new civil suit in the court system',
+                        style: TextStyle(color: _mutedText2, fontSize: 12),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Case Identifiers
+          _civilSectionHeader('Case Registration', Icons.folder_open),
+          _civilInputField('Case ID (auto-generated or enter)', _civilCaseIdController, hint: 'CL-2026-XXXX'),
+          const SizedBox(height: 12),
+          const Text('Type of Civil Suit', style: TextStyle(color: _mutedText2, fontSize: 12)),
+          const SizedBox(height: 6),
+          DropdownButtonFormField<String>(
+            value: _civilTypeController.text.isEmpty ? null : _civilTypeController.text,
+            dropdownColor: _darkCard2,
+            style: const TextStyle(color: _darkText2, fontSize: 13),
+            hint: const Text('Select suit type', style: TextStyle(color: _mutedText2)),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: _darkBg2,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _darkBorder2),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _darkBorder2),
+              ),
+            ),
+            items: _civilTypeOptions.map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+            onChanged: (val) => setState(() => _civilTypeController.text = val ?? ''),
+          ),
+          const SizedBox(height: 12),
+          _civilInputField('Court Room', _civilCourtController),
+          const SizedBox(height: 12),
+          _civilInputField('Presiding Judge', _civilJudgeController),
+          const SizedBox(height: 12),
+          _civilInputField('Next Hearing Date (YYYY-MM-DD)', _civilNextHearingController, hint: '2026-07-15'),
+          const SizedBox(height: 20),
+
+          // Petitioner
+          _civilSectionHeader('Petitioner', Icons.person),
+          _civilInputField('Full Name', _civilPetNameController),
+          const SizedBox(height: 12),
+          _civilInputField('Advocate Name', _civilPetAdvocateController),
+          const SizedBox(height: 12),
+          _civilInputField('Address', _civilPetAddressController),
+          const SizedBox(height: 12),
+          _civilInputField('Aadhaar Number', _civilPetAadhaarController),
+          const SizedBox(height: 12),
+          _civilInputField('Mobile Number', _civilPetMobileController),
+          const SizedBox(height: 20),
+
+          // Respondent
+          _civilSectionHeader('Respondent', Icons.person_outline),
+          _civilInputField('Full Name', _civilRespNameController),
+          const SizedBox(height: 12),
+          _civilInputField('Advocate Name', _civilRespAdvocateController),
+          const SizedBox(height: 12),
+          _civilInputField('Address', _civilRespAddressController),
+          const SizedBox(height: 12),
+          _civilInputField('Aadhaar Number', _civilRespAadhaarController),
+          const SizedBox(height: 12),
+          _civilInputField('Mobile Number', _civilRespMobileController),
+          const SizedBox(height: 20),
+
+          // Subject Matter
+          _civilSectionHeader('Subject Matter', Icons.description),
+          const Text('Property / Subject Matter Details', style: TextStyle(color: _mutedText2, fontSize: 12)),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _civilPropertyController,
+            maxLines: 4,
+            style: const TextStyle(color: _darkText2, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Describe the property or subject of dispute...',
+              hintStyle: const TextStyle(color: _mutedText2, fontSize: 12),
+              filled: true,
+              fillColor: _darkBg2,
+              contentPadding: const EdgeInsets.all(12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _darkBorder2),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _darkBorder2),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _royalBlue2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          const Text('Relief Sought', style: TextStyle(color: _mutedText2, fontSize: 12)),
+          const SizedBox(height: 6),
+          TextField(
+            controller: _civilReliefController,
+            maxLines: 3,
+            style: const TextStyle(color: _darkText2, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'Describe the relief or remedy sought by petitioner...',
+              hintStyle: const TextStyle(color: _mutedText2, fontSize: 12),
+              filled: true,
+              fillColor: _darkBg2,
+              contentPadding: const EdgeInsets.all(12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _darkBorder2),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _darkBorder2),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _royalBlue2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
+          // Submit
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _royalBlue2,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 4,
+              ),
+              onPressed: _civilSubmitting
+                  ? null
+                  : () async {
+                      if (_civilTypeController.text.isEmpty ||
+                          _civilPetNameController.text.isEmpty ||
+                          _civilRespNameController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fill at least the Suit Type, Petitioner and Respondent names.'),
+                            backgroundColor: Colors.redAccent,
+                          ),
+                        );
+                        return;
+                      }
+                      setState(() => _civilSubmitting = true);
+
+                      final now = DateTime.now();
+                      final filingDate =
+                          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+
+                      final caseId = _civilCaseIdController.text.isNotEmpty
+                          ? _civilCaseIdController.text
+                          : 'CL-${now.year}-${now.millisecondsSinceEpoch % 9000 + 1000}';
+
+                      final newCivil = CivilCaseModel(
+                        caseId: caseId,
+                        caseType: 'CIVIL',
+                        civilType: _civilTypeController.text,
+                        courtNumber: _civilCourtController.text,
+                        presidingJudge: _civilJudgeController.text,
+                        filingDate: filingDate,
+                        lastHearingDate: filingDate,
+                        nextHearingDate: _civilNextHearingController.text.isNotEmpty
+                            ? _civilNextHearingController.text
+                            : '',
+                        pendingDays: 0,
+                        orderStatus: 'PENDING',
+                        interimOrders: [],
+                        decreeText: '',
+                        postponedTo: '',
+                        judgeRemarks: '',
+                        digitalSignature: '',
+                        petitioner: {
+                          'name': _civilPetNameController.text,
+                          'advocate': _civilPetAdvocateController.text,
+                          'address': _civilPetAddressController.text,
+                          'aadhaar': _civilPetAadhaarController.text,
+                          'mobileNumber': _civilPetMobileController.text,
+                        },
+                        respondent: {
+                          'name': _civilRespNameController.text,
+                          'advocate': _civilRespAdvocateController.text,
+                          'address': _civilRespAddressController.text,
+                          'aadhaar': _civilRespAadhaarController.text,
+                          'mobileNumber': _civilRespMobileController.text,
+                        },
+                        propertyDetails: _civilPropertyController.text,
+                        reliefSought: _civilReliefController.text,
+                        stageSummary: 'Plaint filed. Awaiting summons issuance.',
+                        hearingHistory: [
+                          {'date': filingDate, 'note': 'Plaint filed by court staff. Registered as $caseId.'}
+                        ],
+                      );
+
+                      await appState.addCivilCase(newCivil);
+                      setState(() {
+                        _civilSubmitting = false;
+                        _civilCaseIdController.clear();
+                        _civilTypeController.clear();
+                        _civilNextHearingController.clear();
+                        _civilPetNameController.clear();
+                        _civilPetAdvocateController.clear();
+                        _civilPetAddressController.clear();
+                        _civilPetAadhaarController.clear();
+                        _civilPetMobileController.clear();
+                        _civilRespNameController.clear();
+                        _civilRespAdvocateController.clear();
+                        _civilRespAddressController.clear();
+                        _civilRespAadhaarController.clear();
+                        _civilRespMobileController.clear();
+                        _civilPropertyController.clear();
+                        _civilReliefController.clear();
+                      });
+
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('✅ Civil plaint $caseId filed successfully'),
+                            backgroundColor: const Color(0xFF10B981),
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                        appState.setStaffActiveTab('status');
+                      }
+                    },
+              icon: _civilSubmitting
+                  ? const SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : const Icon(Icons.send, color: Colors.white),
+              label: Text(
+                _civilSubmitting ? 'Filing...' : (text['submit_civil'] ?? 'File Civil Plaint'),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.1,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _civilSectionHeader(String title, IconData icon) => Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Row(
+          children: [
+            Icon(icon, color: _royalBlue2, size: 16),
+            const SizedBox(width: 8),
+            Text(
+              title.toUpperCase(),
+              style: const TextStyle(
+                color: _royalBlue2,
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+                letterSpacing: 1.2,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(child: Container(height: 1, color: const Color(0xFF334155))),
+          ],
+        ),
+      );
+
+  Widget _civilInputField(String label, TextEditingController ctrl, {String? hint}) => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: const TextStyle(color: _mutedText2, fontSize: 12)),
+          const SizedBox(height: 6),
+          TextField(
+            controller: ctrl,
+            style: const TextStyle(color: _darkText2, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: hint ?? label,
+              hintStyle: const TextStyle(color: _mutedText2, fontSize: 12),
+              filled: true,
+              fillColor: _darkBg2,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _darkBorder2),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _darkBorder2),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: _royalBlue2),
+              ),
+            ),
+          ),
+        ],
+      );
 }
 
 // Extension to allow custom builders on ElevatedButton for backward compatibility

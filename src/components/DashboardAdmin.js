@@ -19,6 +19,14 @@ export const DashboardAdmin = {
         const civilInterim = civilCases.filter(c => c.orderStatus === 'INTERIM_ORDER').length;
         const civilDecree  = civilCases.filter(c => c.orderStatus === 'FINAL_DECREE').length;
 
+        // Cheque stats
+        const chequeCases = state.chequeCases || [];
+        const chequeTotal = chequeCases.length;
+        const chequePending = chequeCases.filter(c => c.orderStatus === 'PENDING' || c.orderStatus === 'SUMMONS_ISSUED').length;
+        const chequeCompounded = chequeCases.filter(c => c.orderStatus === 'COMPOUNDED').length;
+        const chequeDecreed = chequeCases.filter(c => c.orderStatus === 'DECREED' || c.orderStatus === 'DISMISSED').length;
+        const chequeCompoundRate = chequeTotal > 0 ? Math.round((chequeCompounded / chequeTotal) * 100) : 0;
+
         // Build civil docket table rows
         const statusMap = {
             'PENDING':       { cls: 'badge-yellow', label: 'Pending' },
@@ -188,6 +196,109 @@ export const DashboardAdmin = {
                             </thead>
                             <tbody>
                                 ${civilTableRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <!-- SECTION 3: CHEQUE DISHONOUR (S.138) — DOCKET TABLE    -->
+            <!-- ═══════════════════════════════════════════════════════ -->
+            <div style="margin-bottom:8px; margin-top:24px;">
+                <h3 style="font-size:13px; font-weight:800; color:#0d9488; letter-spacing:1px; text-transform:uppercase; display:flex; align-items:center; gap:6px; margin-bottom:12px;">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" style="color:#0d9488;"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                    Cheque Dishonour Cases (Section 138) &mdash; District Overview
+                </h3>
+            </div>
+
+            <!-- Cheque Stats Row -->
+            <div class="grid-cols-4" style="margin-bottom: 24px;">
+                <div class="stat-card" style="border-left: 3px solid #0d9488; background: var(--color-card);">
+                    <div class="stat-details">
+                        <h4>Total S.138 Cases</h4>
+                        <p style="color:#2dd4bf;">${chequeTotal}</p>
+                    </div>
+                    <div class="stat-icon" style="background:rgba(13,148,136,0.25);">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#0d9488" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                    </div>
+                </div>
+                <div class="stat-card" style="border-left: 3px solid var(--color-warning);">
+                    <div class="stat-details">
+                        <h4>Pending Trial</h4>
+                        <p style="color:var(--color-warning);">${chequePending}</p>
+                    </div>
+                    <div class="stat-icon gold">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                </div>
+                <div class="stat-card" style="border-left: 3px solid #10b981;">
+                    <div class="stat-details">
+                        <h4>Compounding Rate</h4>
+                        <p style="color:#10b981;">${chequeCompoundRate}%</p>
+                    </div>
+                    <div class="stat-icon green">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    </div>
+                </div>
+                <div class="stat-card" style="border-left: 3px solid var(--color-danger);">
+                    <div class="stat-details">
+                        <h4>Verdict Disposed</h4>
+                        <p style="color:var(--color-danger);">${chequeDecreed}</p>
+                    </div>
+                    <div class="stat-icon red">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cheque Docket Table -->
+            <div class="card" style="margin-bottom:24px; border-top: 3px solid #0d9488;">
+                <div class="card-header" style="background:rgba(13,148,136,0.12);">
+                    <h3 style="display:flex; align-items:center; gap:8px; color:var(--color-text-main);">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#0d9488" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"/><line x1="12" y1="4" x2="12" y2="20"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+                        Magistrate Performance &amp; Case Registers &mdash; S.138
+                        <span style="font-size:11px; background:rgba(13,148,136,0.15); color:#2dd4bf; border:1px solid rgba(13,148,136,0.3); border-radius:10px; padding:2px 10px; font-weight:700;">${chequeTotal} Registered</span>
+                    </h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="data-table-wrapper">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Case ID</th>
+                                    <th>Cheque Sum</th>
+                                    <th>Complainant</th>
+                                    <th>Accused</th>
+                                    <th>Presiding Magistrate</th>
+                                    <th>Summons Delivery</th>
+                                    <th>Compounding</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${chequeCases.length === 0 
+                                    ? `<tr><td colspan="8" style="text-align:center; padding:24px; color:var(--color-text-muted); font-size:13px;">No Section 138 cases on district registry.</td></tr>`
+                                    : chequeCases.map(cc => {
+                                        const cStatusCls = cc.orderStatus === 'COMPOUNDED' ? 'badge-green' : cc.orderStatus === 'DECREED' ? 'badge-green' : cc.orderStatus === 'DISMISSED' ? 'badge-grey' : 'badge-yellow';
+                                        return `
+                                            <tr>
+                                                <td class="code" style="color:#2dd4bf; font-weight:700;">${cc.caseId}</td>
+                                                <td style="font-weight:700; color:#10b981; font-family:var(--font-mono);">₹${cc.chequeAmount.toLocaleString('en-IN')}</td>
+                                                <td style="font-weight:600;">${cc.petitioner?.name || '-'}</td>
+                                                <td style="font-weight:600;">${cc.respondent?.name || '-'}</td>
+                                                <td style="font-size:12px; color:var(--color-text-muted);">${cc.presidingJudge || '-'}</td>
+                                                <td style="font-size:11.5px;">
+                                                    <div>Dasti: <strong>${cc.dastiStatus}</strong></div>
+                                                    <div>Elec: <strong>${cc.electronicStatus}</strong></div>
+                                                </td>
+                                                <td style="font-size:11px; font-weight:bold; color:${cc.paymentConfirmed ? '#10b981' : '#f59e0b'};">
+                                                    ${cc.paymentConfirmed ? '✓ PAID & CLOSED' : '⏳ UNPAID'}
+                                                </td>
+                                                <td><span class="badge ${cStatusCls}" style="font-size:10px;">${cc.orderStatus}</span></td>
+                                            </tr>
+                                        `;
+                                    }).join('')}
                             </tbody>
                         </table>
                     </div>

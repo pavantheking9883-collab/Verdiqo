@@ -429,41 +429,144 @@ class _DashboardJudgeState extends State<DashboardJudge> {
     final finance = checks['finance'] ?? {};
     final suretyLoad = checks['suretyLoad'] ?? {};
     final property = checks['property'] ?? {};
+    final surety = c.surety;
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text(
-              text['surety_details']!,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFFD4AF37)),
-            ),
-            const Divider(height: 24),
-            Text('Surety Name: ${c.surety.fullName} (${c.surety.relationToAccused})'),
-            const SizedBox(height: 4),
-            Text('Surety Type: ${c.surety.suretyType}'),
-            const SizedBox(height: 4),
-            Text('Monthly Income: ₹${c.surety.monthlyIncome.toStringAsFixed(0)}'),
-            const SizedBox(height: 12),
+    final cardBg = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final borderColor = isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+    final mutedColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    const gold = Color(0xFFD4AF37);
+    const green = Color(0xFF10B981);
+    const red = Color(0xFFEF4444);
+    const amber = Color(0xFFF59E0B);
 
-            _buildChecklistRow('Financial Capability: ${finance['status']}', finance['status'] == 'CAPABLE' || finance['status'] == 'BORDERLINE'),
-            _buildChecklistRow('Surety Cross-Court Load: ${suretyLoad['status']}', suretyLoad['status'] == 'CLEAR'),
-
-            if (c.surety.suretyType == 'PROPERTY') ...[
-              const SizedBox(height: 12),
-              const Divider(),
-              Text('Survey No: ${c.surety.surveyNumber}'),
-              Text('Patta No: ${c.surety.propertyRevenueRecord}'),
-              Text('Revenue Value: ₹${c.surety.propertyValuation.toStringAsFixed(0)}'),
-              Text('Mutation Status: ${c.surety.mutationStatus}', style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFFD4AF37))),
-              const SizedBox(height: 8),
-              _buildChecklistRow('Land Title Deed Verification', property['status'] == 'ELIGIBLE'),
-              _buildChecklistRow('Webland Encumbrance Status: CLEAN', property['status'] == 'ELIGIBLE'),
+    Widget infoRow(String label, String value, {Color? valueColor}) => Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(label, style: TextStyle(color: mutedColor, fontSize: 12)),
+              const SizedBox(width: 8),
+              Flexible(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                    color: valueColor ?? (isDark ? const Color(0xFFF1F5F9) : Colors.black87),
+                  ),
+                ),
+              ),
             ],
+          ),
+        );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: borderColor),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Header
+          Row(
+            children: [
+              const Icon(Icons.verified_user_outlined, color: gold, size: 18),
+              const SizedBox(width: 8),
+              Text(
+                'Surety & Financial Analysis',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: gold),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          // AI check rows
+          _buildChecklistRow('Financial Capability: ${finance['status'] ?? 'N/A'}',
+              finance['status'] == 'CAPABLE' || finance['status'] == 'BORDERLINE'),
+          _buildChecklistRow('Surety Cross-Court Load: ${suretyLoad['status'] ?? 'N/A'}',
+              suretyLoad['status'] == 'CLEAR'),
+          const SizedBox(height: 12),
+
+          // Surety Verification sub-card
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: borderColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Surety Verification',
+                    style: TextStyle(
+                      color: mutedColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.8,
+                    )),
+                const SizedBox(height: 8),
+                infoRow('Name:', surety.fullName),
+                infoRow('Relation:', surety.relationToAccused),
+                infoRow('Mobile:', surety.mobileNumber.isNotEmpty ? surety.mobileNumber : 'N/A'),
+                infoRow('Aadhaar Number:', surety.aadhaarNumber.isNotEmpty ? surety.aadhaarNumber : 'N/A'),
+                infoRow('PAN Number:', surety.panNumber.isNotEmpty ? surety.panNumber : 'N/A'),
+                infoRow('Employment:', surety.employmentDetails.isNotEmpty ? surety.employmentDetails : 'N/A'),
+                infoRow('Monthly Income:', '₹${surety.monthlyIncome.toStringAsFixed(0)}'),
+                infoRow('Surety Type:', surety.suretyType),
+                infoRow(
+                  'Active Bail Load:',
+                  '${surety.activeBailCount} bail(s)',
+                  valueColor: surety.activeBailCount > 1 ? amber : green,
+                ),
+              ],
+            ),
+          ),
+
+          // Property section (if applicable)
+          if (surety.suretyType == 'PROPERTY') ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: borderColor),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Property Details',
+                      style: TextStyle(
+                        color: mutedColor,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.8,
+                      )),
+                  const SizedBox(height: 8),
+                  infoRow('Property Address:', surety.propertyAddress.isNotEmpty ? surety.propertyAddress : 'N/A'),
+                  infoRow('Survey Number:', surety.surveyNumber.isNotEmpty ? surety.surveyNumber : 'N/A'),
+                  infoRow('Property Value:', '₹${surety.propertyValuation.toStringAsFixed(0)}',
+                      valueColor: green),
+                  infoRow('Ownership Document:', surety.propertyOwnershipDoc.isNotEmpty ? surety.propertyOwnershipDoc : 'N/A'),
+                  infoRow('Revenue Record:', surety.propertyRevenueRecord.isNotEmpty ? surety.propertyRevenueRecord : 'N/A'),
+                  infoRow('Encumbrance Status:', surety.encumbranceStatus,
+                      valueColor: surety.encumbranceStatus == 'CLEAN' ? green : red),
+                  infoRow('Mutation Status:', surety.mutationStatus,
+                      valueColor: surety.mutationStatus == 'COMPLETED' ? green : amber),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
+            _buildChecklistRow('Land Title Deed Verification', property['status'] == 'ELIGIBLE'),
+            _buildChecklistRow('Webland Encumbrance Status: CLEAN', property['status'] == 'ELIGIBLE'),
           ],
-        ),
+        ],
       ),
     );
   }

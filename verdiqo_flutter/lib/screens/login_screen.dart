@@ -23,7 +23,8 @@ class _LoginScreenState extends State<LoginScreen> {
       'username': 'Username / G-ID',
       'password': 'Password / Security PIN',
       'login': 'ACCESS SYSTEM',
-      'role_judge': 'Presiding Judge',
+      'role_judge': 'Sessions Judge',
+      'role_civil_judge': 'Civil Judge',
       'role_staff': 'Court Staff',
       'role_admin': 'System Admin',
       'role_citizen': 'Citizen Portal',
@@ -36,7 +37,8 @@ class _LoginScreenState extends State<LoginScreen> {
       'username': 'यूज़रनेम / जी-आईडी (G-ID)',
       'password': 'पासवर्ड / सुरक्षा पिन (PIN)',
       'login': 'सिस्टम एक्सेस करें',
-      'role_judge': 'पीठासीन न्यायाधीश',
+      'role_judge': 'सत्र न्यायाधीश',
+      'role_civil_judge': 'दीवानी न्यायाधीश',
       'role_staff': 'न्यायालय कर्मचारी',
       'role_admin': 'सिस्टम एडमिन',
       'role_citizen': 'नागरिक पोर्टल',
@@ -53,14 +55,17 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _fillDemoCredentials() {
     if (_selectedRole == 'Judge') {
-      _usernameController.text = 'JUDGE-KAMESWARA-2026';
-      _passwordController.text = 'password123';
+      _usernameController.text = 'judge_kameswara';
+      _passwordController.text = 'justice789';
+    } else if (_selectedRole == 'Civil_Judge') {
+      _usernameController.text = 'judge_suryaprakash';
+      _passwordController.text = 'civil456';
     } else if (_selectedRole == 'Staff') {
-      _usernameController.text = 'STAFF-KUMAR';
-      _passwordController.text = 'password123';
+      _usernameController.text = 'staff_rajamundry';
+      _passwordController.text = 'court123';
     } else if (_selectedRole == 'Admin') {
-      _usernameController.text = 'ADMIN-QUANTEX';
-      _passwordController.text = 'password123';
+      _usernameController.text = 'admin_prasad';
+      _passwordController.text = 'district456';
     } else {
       _usernameController.clear();
       _passwordController.clear();
@@ -216,6 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           alignment: WrapAlignment.center,
                           children: [
                             _buildRoleButton('Judge', text['role_judge']!, isDark),
+                            _buildRoleButton('Civil_Judge', text['role_civil_judge']!, isDark),
                             _buildRoleButton('Staff', text['role_staff']!, isDark),
                             _buildRoleButton('Admin', text['role_admin']!, isDark),
                             _buildRoleButton('Citizen', text['role_citizen']!, isDark),

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'providers/app_state.dart';
 import 'screens/login_screen.dart';
 import 'screens/dashboard_judge.dart';
+import 'screens/dashboard_civil_judge.dart';
 import 'screens/dashboard_staff.dart';
 import 'screens/dashboard_admin.dart';
 import 'screens/dashboard_citizen.dart';
@@ -91,6 +92,8 @@ class VerdiqoApp extends StatelessWidget {
     switch (role) {
       case 'Judge':
         return const DashboardJudge();
+      case 'Civil_Judge':
+        return const DashboardCivilJudge();
       case 'Staff':
         return const DashboardStaff();
       case 'Admin':

@@ -2,22 +2,27 @@
 
 import 'package:flutter/material.dart';
 import '../models/case_model.dart';
+import '../models/civil_case_model.dart';
 import '../utils/verification_engine.dart';
 import '../services/api_service.dart';
 
 class AppState extends ChangeNotifier {
   List<CaseModel> _cases = [];
   CaseModel? _selectedCase;
+  List<CivilCaseModel> _civilCases = [];
+  CivilCaseModel? _selectedCivilCase;
   String _locale = 'en'; // 'en' or 'hi'
-  String? _currentUserRole; // 'Judge', 'Staff', 'Admin', 'Citizen'
+  String? _currentUserRole; // 'Judge', 'Staff', 'Admin', 'Citizen', 'Civil_Judge'
   bool _useBackend = false;
   
   // Tab states for Staff and Citizen dashboards
-  String _staffActiveTab = 'status'; // 'status' or 'new_app'
+  String _staffActiveTab = 'status'; // 'status', 'new_app', 'new_civil'
   String _citizenActiveTab = 'home'; // 'home' or 'offences' or 'track'
   
   List<CaseModel> get cases => _cases;
   CaseModel? get selectedCase => _selectedCase;
+  List<CivilCaseModel> get civilCases => _civilCases;
+  CivilCaseModel? get selectedCivilCase => _selectedCivilCase;
   String get locale => _locale;
   String? get currentUserRole => _currentUserRole;
   String get staffActiveTab => _staffActiveTab;
@@ -41,12 +46,28 @@ class AppState extends ChangeNotifier {
             _selectedCase = _cases[idx];
           }
         }
-        notifyListeners();
       }
     } catch (e) {
-      debugPrint('Backend down, running in offline mock mode.');
+      debugPrint('Backend down for criminal cases, running in offline mock mode.');
       _useBackend = false;
     }
+
+    try {
+      final backendCivil = await ApiService.fetchCivilCases();
+      if (backendCivil.isNotEmpty) {
+        _civilCases = backendCivil;
+        _useBackend = true;
+        if (_selectedCivilCase != null) {
+          final idx = _civilCases.indexWhere((c) => c.caseId == _selectedCivilCase!.caseId);
+          if (idx != -1) {
+            _selectedCivilCase = _civilCases[idx];
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Backend down for civil cases: $e');
+    }
+    notifyListeners();
   }
 
   void setLocale(String newLocale) {
@@ -74,12 +95,71 @@ class AppState extends ChangeNotifier {
   void logout() {
     _currentUserRole = null;
     _selectedCase = null;
+    _selectedCivilCase = null;
     notifyListeners();
   }
 
   void selectCase(CaseModel? c) {
     _selectedCase = c;
     notifyListeners();
+  }
+
+  void selectCivilCase(CivilCaseModel? c) {
+    _selectedCivilCase = c;
+    notifyListeners();
+  }
+
+  Future<void> addCivilCase(CivilCaseModel c) async {
+    if (_useBackend) {
+      try {
+        final saved = await ApiService.createCivilCase(c);
+        _civilCases.insert(0, saved);
+        notifyListeners();
+        return;
+      } catch (e) {
+        debugPrint('Failed to save civil case to backend: $e');
+      }
+    }
+    _civilCases.insert(0, c);
+    notifyListeners();
+  }
+
+  Future<void> updateCivilCaseVerdict(
+    String caseId,
+    String verdict,
+    String decreeText,
+    String remarks,
+    String signature,
+  ) async {
+    if (_useBackend) {
+      try {
+        final success = await ApiService.updateCivilVerdict(
+          caseId,
+          verdict,
+          decreeText,
+          remarks,
+          signature,
+        );
+        if (success) {
+          await loadCases();
+          return;
+        }
+      } catch (e) {
+        debugPrint('Failed to submit civil verdict to backend: $e');
+      }
+    }
+
+    final idx = _civilCases.indexWhere((c) => c.caseId == caseId);
+    if (idx != -1) {
+      _civilCases[idx].orderStatus = verdict;
+      _civilCases[idx].decreeText = decreeText;
+      _civilCases[idx].judgeRemarks = remarks;
+      _civilCases[idx].digitalSignature = signature;
+      if (_selectedCivilCase?.caseId == caseId) {
+        _selectedCivilCase = _civilCases[idx];
+      }
+      notifyListeners();
+    }
   }
 
   // Pre-populates form data for staff demo purposes
@@ -859,5 +939,92 @@ class AppState extends ChangeNotifier {
       c.checks = runChecksForCase(c);
       _cases.add(c);
     }
+
+    final List<CivilCaseModel> seedCivilList = [
+      CivilCaseModel(
+        caseId: 'CL-2024-0012',
+        caseType: 'CIVIL',
+        civilType: 'Property Dispute',
+        courtNumber: 'Civil Court Room 1, Rajamundry',
+        presidingJudge: 'Hon\'ble J. Kameswara Rao',
+        filingDate: '2024-03-14',
+        lastHearingDate: '2026-05-10',
+        nextHearingDate: '2026-07-05',
+        pendingDays: 836,
+        orderStatus: 'PENDING',
+        interimOrders: ['Interim injunction granted — respondent restrained from selling property (Order dt. 2024-07-01)'],
+        decreeText: '',
+        postponedTo: '',
+        judgeRemarks: '',
+        digitalSignature: '',
+        petitioner: {
+          'name': 'Smt. Padmavathi Devi Alluri',
+          'advocate': 'Adv. K. Ramachandra Rao',
+          'address': 'D.No 2-4-17, Tadepalligudem Road, Rajamundry',
+          'aadhaar': '234567890123',
+          'mobileNumber': '9441234567'
+        },
+        respondent: {
+          'name': 'Sri. Venkata Rao Alluri',
+          'advocate': 'Adv. P. Subrahmanyam',
+          'address': 'D.No 2-4-17, Tadepalligudem Road, Rajamundry',
+          'aadhaar': '345678901234',
+          'mobileNumber': '9440987654'
+        },
+        propertyDetails: 'Agricultural land of 2.45 acres, Survey No. RS-129/4-A, Tadepalligudem, East Godavari. Disputed succession after death of Sri. Narayana Rao Alluri (2022). Petitioner claims sole heirship.',
+        reliefSought: 'Declaration of ownership and possession of the disputed land. Partition decree as legal heir.',
+        stageSummary: 'Arguments concluded. Evidence recording complete. Awaiting final judgment.',
+        hearingHistory: [
+          {'date': '2024-04-01', 'note': 'Plaint filed. Summons issued to respondent.'},
+          {'date': '2024-06-15', 'note': 'Written statement filed by respondent. Issues framed.'},
+          {'date': '2024-07-01', 'note': 'Interim injunction granted. Respondent restrained from alienation.'},
+          {'date': '2025-02-12', 'note': 'Petitioner examination complete. 3 witnesses examined.'},
+          {'date': '2025-09-04', 'note': 'Respondent evidence recording concluded.'},
+          {'date': '2026-05-10', 'note': 'Final arguments heard. Reserved for judgment.'}
+        ],
+      ),
+      CivilCaseModel(
+        caseId: 'CL-2025-0034',
+        caseType: 'CIVIL',
+        civilType: 'Money Recovery Suit',
+        courtNumber: 'Civil Court Room 1, Rajamundry',
+        presidingJudge: 'Hon\'ble J. Kameswara Rao',
+        filingDate: '2025-02-10',
+        lastHearingDate: '2026-05-15',
+        nextHearingDate: '2026-06-29',
+        pendingDays: 126,
+        orderStatus: 'INTERIM_ORDER',
+        interimOrders: ['Interim attachment order issued for bank accounts of respondent up to disputed sum of Rs. 15,00,000.'],
+        decreeText: '',
+        postponedTo: '',
+        judgeRemarks: 'Interim attachment active. Respondent ordered to deposit surety or bank guarantee.',
+        digitalSignature: 'SHA-256/CIVIL-2025-0034/KAMESWARA',
+        petitioner: {
+          'name': 'Sri. Lakshmi Narayana Karuturi',
+          'advocate': 'Adv. M. Sitarama Murthy',
+          'address': 'Flat 101, Ramya Enclave, Danavaipeta, Rajamundry',
+          'aadhaar': '789012345678',
+          'mobileNumber': '9848012345'
+        },
+        respondent: {
+          'name': 'Sri. Satish Kumar Puppala',
+          'advocate': 'Adv. G. Radhakrishna',
+          'address': 'D.No 40-15-9, Siddhartha Nagar, Vijayawada',
+          'aadhaar': '890123456789',
+          'mobileNumber': '9849054321'
+        },
+        propertyDetails: 'Disputed transaction under Promissory Note dated 2024-01-10 for business loan. Principal amount Rs. 12,00,000 with 18% p.a. interest.',
+        reliefSought: 'Recovery of Rs. 15,48,000 (including interest) with future interest and costs of the suit.',
+        stageSummary: 'Respondent submitted written objections. Hearing on execution of Promissory Note in progress.',
+        hearingHistory: [
+          {'date': '2025-02-15', 'note': 'Suit registered. Notice served.'},
+          {'date': '2025-04-10', 'note': 'Interim application for attachment under Order 38 Rule 5 filed.'},
+          {'date': '2025-05-12', 'note': 'Counter filed by respondent.'},
+          {'date': '2026-05-15', 'note': 'Interim attachment order made absolute.'}
+        ],
+      )
+    ];
+
+    _civilCases.addAll(seedCivilList);
   }
 }
